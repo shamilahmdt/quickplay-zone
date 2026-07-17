@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { Sun, Moon, Gamepad2, Github } from 'lucide-react';
+import { Sun, Moon, Gamepad2, Github, Info } from 'lucide-react';
 import { gameRegistry } from '../core/gameRegistry';
 
 export const Home: FC = () => {
@@ -23,36 +23,6 @@ export const Home: FC = () => {
       <div className={`fixed bottom-[-15%] left-[-15%] w-[50vw] h-[50vw] rounded-full blur-[140px] opacity-25 -z-10 transition-colors duration-300 ${
         dark ? 'bg-zinc-900' : 'bg-slate-100'
       }`} />
-
-      {/* Header */}
-      <header className="px-6 md:px-14 py-6 flex items-center justify-between z-10">
-        <div className="flex items-center gap-2">
-          <Gamepad2 className="w-5 h-5" />
-          <span className="text-xs font-bold uppercase tracking-wider">QUICKPLAY ZONE</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <a
-            href="https://github.com/shamilahmdt/quickplay-zone"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`p-2 rounded-[4px] border transition-colors cursor-pointer ${
-              dark ? 'bg-[#1a1a1c] border-slate-800 text-slate-300 hover:border-white' : 'bg-white border-slate-200 text-slate-655 hover:border-black'
-            }`}
-            aria-label="GitHub Repository"
-          >
-            <Github className="w-3.5 h-3.5" />
-          </a>
-          <button
-            onClick={toggleTheme}
-            className={`p-2 rounded-[4px] border transition-colors cursor-pointer ${
-              dark ? 'bg-[#1a1a1c] border-slate-800 text-slate-300 hover:border-white' : 'bg-white border-slate-200 text-slate-655 hover:border-black'
-            }`}
-            aria-label="Toggle Theme"
-          >
-            {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-          </button>
-        </div>
-      </header>
 
       {/* Main Grid */}
       <main className="flex-1 flex items-center justify-center px-6 md:px-14 py-4 md:py-8 z-10">
@@ -79,25 +49,56 @@ export const Home: FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row flex-wrap items-center gap-4 justify-center lg:justify-start">
                 <Link to="/dashboard" className="w-full sm:w-auto">
                   <button className={`w-full sm:w-auto px-8 py-3 rounded-[4px] border font-bold uppercase tracking-wider text-xs transition-all duration-200 active:scale-[0.98] cursor-pointer ${
                     dark
                       ? 'bg-white text-black border-white hover:bg-transparent hover:text-white'
                       : 'bg-black text-white border-black hover:bg-transparent hover:text-black'
                   }`}>
-                    LAUNCH LOBBY
+                    GET STARTED
                   </button>
                 </Link>
                 <Link to="/about" className="w-full sm:w-auto">
-                  <button className={`w-full sm:w-auto px-8 py-3 rounded-[4px] border font-bold uppercase tracking-wider text-xs transition-all duration-200 active:scale-[0.98] cursor-pointer ${
+                  <button className={`w-full sm:w-auto px-8 py-3 rounded-[4px] border font-bold uppercase tracking-wider text-xs transition-all duration-200 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 ${
                     dark
                       ? 'bg-[#1a1a1c] border-slate-800 text-zinc-100 hover:border-slate-400'
                       : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400'
                   }`}>
-                    REGULATIONS
+                    <Info className="w-3.5 h-3.5" />
+                    ABOUT
                   </button>
                 </Link>
+
+                {/* Github and Theme Toggles */}
+                <div className="flex items-center gap-3">
+                  <a
+                    href="https://github.com/shamilahmdt/quickplay-zone"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`p-3 rounded-[4px] border transition-colors cursor-pointer flex items-center justify-center relative group ${
+                      dark ? 'bg-[#1a1a1c] border-slate-800 text-slate-300 hover:border-white' : 'bg-white border-slate-200 text-slate-655 hover:border-black'
+                    }`}
+                    aria-label="GitHub Repository"
+                  >
+                    <Github className="w-3.5 h-3.5" />
+                    <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap bg-[#1a1a1c] border border-slate-800 text-[10px] font-bold text-zinc-300 px-2 py-1 rounded shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+                      View on GitHub
+                    </span>
+                  </a>
+                  <button
+                    onClick={toggleTheme}
+                    className={`p-3 rounded-[4px] border transition-colors cursor-pointer flex items-center justify-center relative group ${
+                      dark ? 'bg-[#1a1a1c] border-slate-800 text-slate-300 hover:border-white' : 'bg-white border-slate-200 text-slate-655 hover:border-black'
+                    }`}
+                    aria-label="Toggle Theme"
+                  >
+                    {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                    <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap bg-[#1a1a1c] border border-slate-800 text-[10px] font-bold text-zinc-300 px-2 py-1 rounded shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+                      Toggle Theme
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
 

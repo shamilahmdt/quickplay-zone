@@ -74,23 +74,29 @@ export const Navbar: FC<NavbarProps> = ({ onToggleSidebar }) => {
           href="https://github.com/shamilahmdt/quickplay-zone"
           target="_blank"
           rel="noopener noreferrer"
-          className={`w-11 h-11 rounded-[4px] border transition-colors cursor-pointer flex items-center justify-center ${
+          className={`w-11 h-11 rounded-[4px] border transition-colors cursor-pointer flex items-center justify-center relative group ${
             dark ? 'bg-[#1a1a1c] border-slate-800 hover:border-white text-slate-300' : 'bg-slate-55 border-slate-200 hover:border-slate-400 text-slate-600'
           }`}
           aria-label="GitHub Repository"
         >
           <Github className="w-4 h-4" />
+          <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap bg-[#1a1a1c] border border-slate-800 text-[10px] font-bold text-zinc-300 px-2 py-1 rounded shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+            View on GitHub
+          </span>
         </a>
 
         {/* Theme Toggle - 44x44px tap target */}
         <button
           onClick={toggleTheme}
-          className={`w-11 h-11 rounded-[4px] border transition-colors cursor-pointer flex items-center justify-center ${
+          className={`w-11 h-11 rounded-[4px] border transition-colors cursor-pointer flex items-center justify-center relative group ${
             dark ? 'bg-[#1a1a1c] border-slate-800 hover:border-white text-yellow-450' : 'bg-slate-55 border-slate-200 hover:border-slate-400 text-slate-600'
           }`}
           aria-label="Toggle Theme"
         >
           {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap bg-[#1a1a1c] border border-slate-800 text-[10px] font-bold text-zinc-300 px-2 py-1 rounded shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+            Toggle Theme
+          </span>
         </button>
       </div>
     </header>
