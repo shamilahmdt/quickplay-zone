@@ -2,7 +2,8 @@ import type { FC } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useOfflineStatus } from '../../hooks/useOfflineStatus';
 import { useTheme } from '../../context/ThemeContext';
-import { Gamepad2, Info, Menu, Sun, Moon, Github } from 'lucide-react';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
+import { Gamepad2, Info, Menu, Sun, Moon, Github, Download } from 'lucide-react';
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -11,6 +12,7 @@ interface NavbarProps {
 export const Navbar: FC<NavbarProps> = ({ onToggleSidebar }) => {
   const isOffline = useOfflineStatus();
   const { dark, toggleTheme } = useTheme();
+  const { isInstallable, install } = usePWAInstall();
 
   return (
     <header className={`sticky top-0 z-50 border-b px-4 md:px-6 py-3 flex items-center justify-between transition-colors duration-300 ${
@@ -68,6 +70,22 @@ export const Navbar: FC<NavbarProps> = ({ onToggleSidebar }) => {
         <span className="hidden sm:inline-block text-xs text-slate-500 font-medium mr-2">
           {isOffline ? 'Offline mode' : 'Online'}
         </span>
+
+        {/* Install App Button - 44x44px tap target */}
+        {isInstallable && (
+          <button
+            onClick={install}
+            className={`w-11 h-11 rounded-[4px] border transition-colors cursor-pointer flex items-center justify-center relative group ${
+              dark ? 'bg-violet-950/40 border-violet-800 hover:border-violet-400 text-violet-400' : 'bg-violet-55 border-violet-200 hover:border-violet-400 text-violet-600'
+            }`}
+            aria-label="Install App"
+          >
+            <Download className="w-4 h-4" />
+            <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap bg-[#1a1a1c] border border-slate-800 text-[10px] font-bold text-zinc-300 px-2 py-1 rounded shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+              Install App
+            </span>
+          </button>
+        )}
 
         {/* GitHub Repository Link - 44x44px tap target */}
         <a

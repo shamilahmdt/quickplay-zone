@@ -5,6 +5,7 @@ import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import Footer from './components/layout/Footer';
 import Splashscreen from './components/ui/Splashscreen';
+import ReloadPrompt from './components/ui/ReloadPrompt';
 
 function LayoutContent() {
   const { dark } = useTheme();
@@ -65,6 +66,7 @@ function App() {
   return (
     <ThemeProvider>
       <LayoutContent />
+      <ReloadPrompt />
     </ThemeProvider>
   );
 }
