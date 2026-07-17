@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-dark: #121214;
+  --color-bg-card: #1a1a1c;
+  --color-accent-primary-from: #e8e8ea;
+  --color-accent-primary-to: #94a3b8;
+  --color-accent-secondary: #64748b;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: #121214;
+    color: #e8e8ea;
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+}
+
+/* Primary Gradient Text Accent */
+.text-silver-gradient {
+  background: linear-gradient(135deg, #e8e8ea 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Speed line decorative container */
+.speed-line-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Base horizontal speed-line keyframes & helper */
+@keyframes speed-streak {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateX(150%);
+    opacity: 0;
+  }
+}
+
+.animate-speed-streak-1 {
+  animation: speed-streak 3s linear infinite;
+}
+
+.animate-speed-streak-2 {
+  animation: speed-streak 4s linear infinite 1.5s;
+}
+
+.animate-speed-streak-slow {
+  animation: speed-streak 6s linear infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #121214;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #121214;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #2a2a2d;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Splashscreen Zoom Scale-up Animation */
+@keyframes scale-up {
+  0% {
+    transform: scale(0.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-up {
+  animation: scale-up 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
