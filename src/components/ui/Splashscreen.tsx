@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Gamepad2 } from 'lucide-react';
+import Logo from '../../assets/Logo.png';
 
 export const Splashscreen: FC = () => {
   return (
@@ -13,16 +13,8 @@ export const Splashscreen: FC = () => {
 
       {/* Main scale-up container */}
       <div className="flex flex-col items-center gap-6 relative z-10 animate-scale-up">
-        {/* Gamepad Icon */}
-        <div className="p-5 border border-slate-800 bg-[#1a1a1c] rounded-[4px] shadow-[0_0_20px_rgba(255,255,255,0.06)]">
-          <Gamepad2 className="w-16 h-16 text-white" />
-        </div>
-
-        {/* Wordmark */}
-        <div className="flex flex-col items-center text-center">
-          <span className="text-2xl font-black tracking-wider uppercase leading-none">QUICKPLAY</span>
-          <span className="text-[12px] font-bold tracking-[0.3em] uppercase leading-none mt-1 text-slate-500">ZONE</span>
-        </div>
+        {/* Logo Icon */}
+        <img src={Logo} alt="QuickPlay Zone Logo" className="w-48 h-48 object-contain" />
       </div>
     </div>
   );

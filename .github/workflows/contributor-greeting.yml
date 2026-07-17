@@ -1,0 +1,29 @@
+name: Contributor Greeting
+on:
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  greeting:
+    # Rule: Do not reply to Shamil (the owner)
+    if: github.event.pull_request.user.login != github.repository_owner
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Professional Reply
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const author = context.payload.pull_request.user.login;
+
+            const message = `### 👋 Hello, @${author}! \n\n` +
+                            `Thank you for your contribution to **DevTasks**. \n\n` +
+                            `The maintainer has been notified and will review your pull request shortly. If any changes are needed, we will let you know in the comments below.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            })

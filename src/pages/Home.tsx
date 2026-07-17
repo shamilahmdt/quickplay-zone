@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { Sun, Moon, Gamepad2 } from 'lucide-react';
+import { Sun, Moon, Gamepad2, Github } from 'lucide-react';
 import { gameRegistry } from '../core/gameRegistry';
 
 export const Home: FC = () => {
@@ -30,15 +30,28 @@ export const Home: FC = () => {
           <Gamepad2 className="w-5 h-5" />
           <span className="text-xs font-bold uppercase tracking-wider">QUICKPLAY ZONE</span>
         </div>
-        <button
-          onClick={toggleTheme}
-          className={`p-2 rounded-[4px] border transition-colors cursor-pointer ${
-            dark ? 'bg-[#1a1a1c] border-slate-800 text-slate-300 hover:border-white' : 'bg-white border-slate-200 text-slate-655 hover:border-black'
-          }`}
-          aria-label="Toggle Theme"
-        >
-          {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-        </button>
+        <div className="flex items-center gap-3">
+          <a
+            href="https://github.com/shamilahmdt/quickplay-zone"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`p-2 rounded-[4px] border transition-colors cursor-pointer ${
+              dark ? 'bg-[#1a1a1c] border-slate-800 text-slate-300 hover:border-white' : 'bg-white border-slate-200 text-slate-655 hover:border-black'
+            }`}
+            aria-label="GitHub Repository"
+          >
+            <Github className="w-3.5 h-3.5" />
+          </a>
+          <button
+            onClick={toggleTheme}
+            className={`p-2 rounded-[4px] border transition-colors cursor-pointer ${
+              dark ? 'bg-[#1a1a1c] border-slate-800 text-slate-300 hover:border-white' : 'bg-white border-slate-200 text-slate-655 hover:border-black'
+            }`}
+            aria-label="Toggle Theme"
+          >
+            {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </header>
 
       {/* Main Grid */}

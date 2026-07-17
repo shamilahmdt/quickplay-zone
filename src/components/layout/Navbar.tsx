@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useOfflineStatus } from '../../hooks/useOfflineStatus';
 import { useTheme } from '../../context/ThemeContext';
-import { Gamepad2, Info, Menu, Sun, Moon } from 'lucide-react';
+import { Gamepad2, Info, Menu, Sun, Moon, Github } from 'lucide-react';
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -54,7 +54,7 @@ export const Navbar: FC<NavbarProps> = ({ onToggleSidebar }) => {
           to="/about"
           className={({ isActive }) =>
             `text-[11px] font-bold tracking-wider uppercase transition-colors hover:text-opacity-80 flex items-center gap-1 ${
-              isActive ? (dark ? 'text-white border-b-2 border-slate-350 pb-1' : 'text-slate-950 border-b-2 border-slate-900 pb-1') : (dark ? 'text-slate-400' : 'text-slate-600')
+              isActive ? (dark ? 'text-white border-b-2 border-slate-355 pb-1' : 'text-slate-950 border-b-2 border-slate-900 pb-1') : (dark ? 'text-slate-400' : 'text-slate-600')
             }`
           }
         >
@@ -63,17 +63,30 @@ export const Navbar: FC<NavbarProps> = ({ onToggleSidebar }) => {
       </nav>
 
       {/* Toggles & Indicators */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {/* Connection State - Hidden on mobile, visible from sm: (640px) up */}
-        <span className="hidden sm:inline-block text-xs text-slate-500 font-medium">
+        <span className="hidden sm:inline-block text-xs text-slate-500 font-medium mr-2">
           {isOffline ? 'Offline mode' : 'Online'}
         </span>
+
+        {/* GitHub Repository Link - 44x44px tap target */}
+        <a
+          href="https://github.com/shamilahmdt/quickplay-zone"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`w-11 h-11 rounded-[4px] border transition-colors cursor-pointer flex items-center justify-center ${
+            dark ? 'bg-[#1a1a1c] border-slate-800 hover:border-white text-slate-300' : 'bg-slate-55 border-slate-200 hover:border-slate-400 text-slate-600'
+          }`}
+          aria-label="GitHub Repository"
+        >
+          <Github className="w-4 h-4" />
+        </a>
 
         {/* Theme Toggle - 44x44px tap target */}
         <button
           onClick={toggleTheme}
           className={`w-11 h-11 rounded-[4px] border transition-colors cursor-pointer flex items-center justify-center ${
-            dark ? 'bg-[#1a1a1c] border-slate-800 hover:border-white text-yellow-450' : 'bg-slate-50 border-slate-200 hover:border-slate-400 text-slate-600'
+            dark ? 'bg-[#1a1a1c] border-slate-800 hover:border-white text-yellow-450' : 'bg-slate-55 border-slate-200 hover:border-slate-400 text-slate-600'
           }`}
           aria-label="Toggle Theme"
         >

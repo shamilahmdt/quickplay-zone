@@ -1,0 +1,29 @@
+# Labeler Configuration
+
+ui:
+- changed-files:
+  - any-glob-to-any-file: ['src/pages/**/*', 'src/components/**/*', '**/*.css', '**/*.scss']
+
+logic:
+- changed-files:
+  - any-glob-to-any-file: ['src/hooks/**/*', 'src/utils/**/*', 'src/context/**/*']
+
+docs:
+- changed-files:
+  - any-glob-to-any-file: ['**/*.md', 'LICENSE']
+
+chore:
+- changed-files:
+  - any-glob-to-any-file: ['package.json', 'package-lock.json', '.github/**/*', 'vite.config.js', 'tailwind.config.js']
+
+content:
+- changed-files:
+  - any-glob-to-any-file: ['public/**/*', 'src/assets/**/*']
+
+workflow:
+- changed-files:
+  - any-glob-to-any-file: ['.github/workflows/*']
+
+config:
+- changed-files:
+  - any-glob-to-any-file: ['*.config.js', '*.config.ts', '.env*']
