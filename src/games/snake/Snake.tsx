@@ -256,6 +256,16 @@ export const Snake: FC = () => {
     setName('');
   };
 
+  const handleSkipSaveScore = () => {
+    storage.addLeaderboardScore('snake', {
+      playerName: 'Anonymous Player',
+      score: score
+    });
+    setLeaderboard(storage.getLeaderboard('snake'));
+    setShowNamePrompt(false);
+    setName('');
+  };
+
   const handleOnscreenControl = (dir: Direction) => {
     if (gameStatus === 'IDLE') {
       resetGame();
@@ -350,14 +360,22 @@ export const Snake: FC = () => {
                     placeholder="Your name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-[#1a1a1c] border border-slate-800 rounded-[4px] px-3 py-2 text-[#e8e8ea] placeholder-slate-655 text-center text-xs font-medium focus:outline-none focus:border-white transition-colors"
+                    className="w-full bg-[#1a1a1c] border border-slate-800 rounded-[4px] px-3 py-2 text-[#e8e8ea] placeholder-slate-655 text-center text-base font-medium focus:outline-none focus:border-white transition-colors"
                   />
-                  <button
-                    onClick={handleSaveScore}
-                    className="w-full bg-white text-black font-bold py-2 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors text-xs uppercase tracking-wider cursor-pointer"
-                  >
-                    Save Score
-                  </button>
+                  <div className="flex gap-2 w-full">
+                    <button
+                      onClick={handleSaveScore}
+                      className="flex-1 bg-white text-black font-bold py-2 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors text-xs uppercase tracking-wider cursor-pointer"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={handleSkipSaveScore}
+                      className="flex-1 bg-[#1a1a1c] text-slate-400 font-bold py-2 rounded-[4px] border border-slate-800 hover:border-slate-500 hover:text-white transition-colors text-xs uppercase tracking-wider cursor-pointer"
+                    >
+                      Skip
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button
