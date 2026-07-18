@@ -22,6 +22,16 @@ export default function ReloadPrompt() {
     setNeedRefresh(false)
   }
 
+  // Only show the reload prompt UI when running as an installed PWA (standalone, minimal-ui, or fullscreen)
+  const isPWA = 
+    typeof window !== 'undefined' && 
+    (window.matchMedia('(display-mode: standalone)').matches || 
+     window.matchMedia('(display-mode: minimal-ui)').matches || 
+     window.matchMedia('(display-mode: fullscreen)').matches || 
+     (window.navigator as any).standalone === true)
+
+  if (!isPWA) return null
+
   if (!offlineReady && !needRefresh) return null
 
   return (

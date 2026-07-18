@@ -14,22 +14,27 @@ export const Dashboard: FC = () => {
     }`}>
       {/* Game Catalog Section */}
       <section className="flex flex-col gap-6">
-        <div className={`flex flex-col gap-1.5 border-b pb-4 ${dark ? 'border-slate-800' : 'border-slate-200'}`}>
-          <Link
-            to="/"
-            className={`inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wider uppercase mb-2 w-fit transition-colors ${
-              dark ? 'text-slate-400 hover:text-white' : 'text-slate-550 hover:text-slate-950'
-            }`}
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Home
-          </Link>
-          <span className={`text-[10px] font-bold tracking-wider uppercase ${dark ? 'text-slate-500' : 'text-slate-450'}`}>
-            Arcade Grid
-          </span>
-          <h1 className={`text-2xl font-black uppercase tracking-tight ${dark ? 'text-white' : 'text-slate-955'}`}>
-            Available Games
-          </h1>
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 ${dark ? 'border-slate-800' : 'border-slate-200'}`}>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              className={`p-2 border rounded-[4px] transition-all cursor-pointer ${dark
+                  ? 'bg-[#1a1a1c] border-slate-800 text-slate-400 hover:text-white hover:border-white'
+                  : 'bg-white border-slate-200 text-slate-650 hover:text-black hover:border-black'
+                }`}
+              title="Back to Home"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div>
+              <span className={`text-[10px] font-bold tracking-wider uppercase ${dark ? 'text-slate-500' : 'text-slate-450'}`}>
+                Arcade Grid
+              </span>
+              <h1 className={`text-2xl font-black uppercase tracking-tight ${dark ? 'text-white' : 'text-slate-955'}`}>
+                Available Games
+              </h1>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
