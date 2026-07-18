@@ -1,16 +1,68 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/Logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0f172a" />
-    <meta name="description" content="A beginner-friendly open-source gaming zone with simple arcade games." />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>QuickPlayZone</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/Logo.png" />
+
+  <meta name="google-site-verification" content="%VITE_GOOGLE_SITE_VERIFICATION%" />
+
+  <!-- Clarity Tracking Code -->
+  <script type="text/javascript">
+    (function (c, l, a, r, i, t, y) {
+      if (!i || i.startsWith('%')) return;
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+      t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+    })(window, document, "clarity", "script", "%VITE_CLARITY_ID%");
+  </script>
+
+  <!-- Google tag (gtag.js) -->
+  <script>
+    (function() {
+      var gId = "%VITE_GTAG_ID%";
+      if (!gId || gId.startsWith('%')) return;
+      var scr = document.createElement('script');
+      scr.async = true;
+      scr.src = "https://www.googletagmanager.com/gtag/js?id=" + gId;
+      document.head.appendChild(scr);
+      
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function() { dataLayer.push(arguments); };
+      gtag('js', new Date());
+      gtag('config', gId);
+    })();
+  </script>
+
+  <!-- Primary Meta Tags -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="title" content="QuickPlayZone - Fun & Simple Arcade Games" />
+  <meta name="description" content="A beginner-friendly open-source gaming zone with simple arcade games. Play your favorite classic mini-games instantly in your browser." />
+  <meta name="keywords" content="gaming, arcade, mini-games, open-source games, play zone, free online games, web arcade" />
+  <meta name="robots" content="index, follow" />
+  <meta name="language" content="English" />
+  <meta name="author" content="QuickPlayZone Team" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="QuickPlayZone - Fun & Simple Arcade Games" />
+  <meta property="og:description" content="A beginner-friendly open-source gaming zone with simple arcade games. Play your favorite classic mini-games instantly in your browser." />
+  <meta property="og:image" content="/Logo.png" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:title" content="QuickPlayZone - Fun & Simple Arcade Games" />
+  <meta property="twitter:description" content="A beginner-friendly open-source gaming zone with simple arcade games. Play your favorite classic mini-games instantly in your browser." />
+  <meta property="twitter:image" content="/Logo.png" />
+
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <title>QuickPlayZone - Fun & Simple Arcade Games</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

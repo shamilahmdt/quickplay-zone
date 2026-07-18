@@ -53,8 +53,8 @@ export const Home: FC = () => {
                 <Link to="/dashboard" className="w-full sm:w-auto">
                   <button className={`w-full sm:w-auto px-8 py-3 rounded-[4px] border font-bold uppercase tracking-wider text-xs transition-all duration-200 active:scale-[0.98] cursor-pointer ${
                     dark
-                      ? 'bg-white text-black border-white hover:bg-transparent hover:text-white'
-                      : 'bg-black text-white border-black hover:bg-transparent hover:text-black'
+                      ? 'bg-white text-black border-white hover:bg-zinc-300 hover:border-slate-400'
+                      : 'bg-black text-white border-black hover:bg-zinc-900 hover:border-slate-700'
                   }`}>
                     GET STARTED
                   </button>

@@ -1,5 +1,6 @@
 import type { GameMeta } from './types';
 import Snake from '../games/snake/Snake';
+import CosmicDefender from '../games/cosmic-defender/CosmicDefender';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -10,6 +11,15 @@ export const gameRegistry: GameMeta[] = [
     category: 'Arcade',
     controls: ['W/A/S/D / Arrows: Directional move', 'Spacebar: Pause game'],
     component: Snake,
+  },
+  {
+    id: 'cosmic_defender',
+    name: 'Cosmic Defender',
+    description: 'Defend the galaxy from waves of hostile alien invaders. Move left/right to aim, shoot lasers, and survive!',
+    thumbnail: '🚀',
+    category: 'Arcade',
+    controls: ['A/D / Arrow Keys: Move Ship', 'Spacebar: Fire Lasers'],
+    component: CosmicDefender,
   },
 ];
 

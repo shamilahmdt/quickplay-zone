@@ -13,7 +13,7 @@ export const Snake: FC = () => {
     { x: 10, y: 12 },
   ]);
   const [food, setFood] = useState<Position>({ x: 10, y: 5 });
-  const [direction, setDirection] = useState<Direction>('UP');
+  const [, setDirection] = useState<Direction>('UP');
   const [gameStatus, setGameStatus] = useState<'IDLE' | 'PLAYING' | 'PAUSED' | 'GAME_OVER'>('IDLE');
   
   // Game Custom Options
@@ -30,7 +30,8 @@ export const Snake: FC = () => {
   const [leaderboard, setLeaderboard] = useState(storage.getLeaderboard('snake'));
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const nextDirection = useRef<Direction>('UP');
+  const directionRef = useRef<Direction>('UP');
+  const inputQueue = useRef<Direction[]>([]);
 
   // Load highscore
   useEffect(() => {
@@ -49,32 +50,43 @@ export const Snake: FC = () => {
         e.preventDefault();
       }
 
-      if (['ArrowUp', 'KeyW'].includes(e.code) && direction !== 'DOWN') {
-        nextDirection.current = 'UP';
-        if (gameStatus === 'IDLE') resetGame();
-        else if (gameStatus === 'PAUSED') setGameStatus('PLAYING');
-      } else if (['ArrowDown', 'KeyS'].includes(e.code) && direction !== 'UP') {
-        nextDirection.current = 'DOWN';
-        if (gameStatus === 'IDLE') resetGame();
-        else if (gameStatus === 'PAUSED') setGameStatus('PLAYING');
-      } else if (['ArrowLeft', 'KeyA'].includes(e.code) && direction !== 'RIGHT') {
-        nextDirection.current = 'LEFT';
-        if (gameStatus === 'IDLE') resetGame();
-        else if (gameStatus === 'PAUSED') setGameStatus('PLAYING');
-      } else if (['ArrowRight', 'KeyD'].includes(e.code) && direction !== 'LEFT') {
-        nextDirection.current = 'RIGHT';
-        if (gameStatus === 'IDLE') resetGame();
-        else if (gameStatus === 'PAUSED') setGameStatus('PLAYING');
-      } else if (e.code === 'Space') {
-        if (gameStatus === 'PLAYING') setGameStatus('PAUSED');
-        else if (gameStatus === 'PAUSED') setGameStatus('PLAYING');
-        else if (gameStatus === 'GAME_OVER') resetGame();
+      if (gameStatus !== 'PLAYING') {
+        if (e.code === 'Space') {
+          if (gameStatus === 'PAUSED') setGameStatus('PLAYING');
+          else if (gameStatus === 'GAME_OVER' || gameStatus === 'IDLE') resetGame();
+        } else if (['ArrowUp', 'KeyW', 'ArrowDown', 'KeyS', 'ArrowLeft', 'KeyA', 'ArrowRight', 'KeyD'].includes(e.code)) {
+          if (gameStatus === 'IDLE') resetGame();
+          else if (gameStatus === 'PAUSED') setGameStatus('PLAYING');
+        }
+        return;
+      }
+
+      if (e.code === 'Space') {
+        setGameStatus('PAUSED');
+        return;
+      }
+
+      // Limit queue length to prevent laggy input chains
+      if (inputQueue.current.length >= 2) return;
+
+      const lastDir = inputQueue.current.length > 0 
+        ? inputQueue.current[inputQueue.current.length - 1] 
+        : directionRef.current;
+
+      if (['ArrowUp', 'KeyW'].includes(e.code) && lastDir !== 'DOWN' && lastDir !== 'UP') {
+        inputQueue.current.push('UP');
+      } else if (['ArrowDown', 'KeyS'].includes(e.code) && lastDir !== 'UP' && lastDir !== 'DOWN') {
+        inputQueue.current.push('DOWN');
+      } else if (['ArrowLeft', 'KeyA'].includes(e.code) && lastDir !== 'RIGHT' && lastDir !== 'LEFT') {
+        inputQueue.current.push('LEFT');
+      } else if (['ArrowRight', 'KeyD'].includes(e.code) && lastDir !== 'LEFT' && lastDir !== 'RIGHT') {
+        inputQueue.current.push('RIGHT');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [direction, gameStatus, difficulty, showNamePrompt]);
+  }, [gameStatus, showNamePrompt]);
 
   // Main game loop
   useEffect(() => {
@@ -83,8 +95,13 @@ export const Snake: FC = () => {
     const interval = setInterval(() => {
       setSnake((prevSnake) => {
         const head = prevSnake[0];
-        const currentDir = nextDirection.current;
-        setDirection(currentDir);
+        
+        let currentDir = directionRef.current;
+        if (inputQueue.current.length > 0) {
+          currentDir = inputQueue.current.shift()!;
+          directionRef.current = currentDir;
+          setDirection(currentDir);
+        }
         
         const rawHead = getNextHead(head, currentDir);
         let nextX = rawHead.x;
@@ -215,7 +232,8 @@ export const Snake: FC = () => {
     ]);
     setFood({ x: 10, y: 5 });
     setDirection('UP');
-    nextDirection.current = 'UP';
+    directionRef.current = 'UP';
+    inputQueue.current = [];
     setScore(0);
     setShowNamePrompt(false);
     setName('');
@@ -238,14 +256,37 @@ export const Snake: FC = () => {
     setName('');
   };
 
+  const handleSkipSaveScore = () => {
+    storage.addLeaderboardScore('snake', {
+      playerName: 'Anonymous Player',
+      score: score
+    });
+    setLeaderboard(storage.getLeaderboard('snake'));
+    setShowNamePrompt(false);
+    setName('');
+  };
+
   const handleOnscreenControl = (dir: Direction) => {
     if (gameStatus === 'IDLE') {
       resetGame();
+      return;
     }
-    if (dir === 'UP' && direction !== 'DOWN') nextDirection.current = 'UP';
-    if (dir === 'DOWN' && direction !== 'UP') nextDirection.current = 'DOWN';
-    if (dir === 'LEFT' && direction !== 'RIGHT') nextDirection.current = 'LEFT';
-    if (dir === 'RIGHT' && direction !== 'LEFT') nextDirection.current = 'RIGHT';
+    if (gameStatus === 'PAUSED') {
+      setGameStatus('PLAYING');
+      return;
+    }
+    if (gameStatus !== 'PLAYING') return;
+
+    if (inputQueue.current.length >= 2) return;
+
+    const lastDir = inputQueue.current.length > 0 
+      ? inputQueue.current[inputQueue.current.length - 1] 
+      : directionRef.current;
+
+    if (dir === 'UP' && lastDir !== 'DOWN' && lastDir !== 'UP') inputQueue.current.push('UP');
+    if (dir === 'DOWN' && lastDir !== 'UP' && lastDir !== 'DOWN') inputQueue.current.push('DOWN');
+    if (dir === 'LEFT' && lastDir !== 'RIGHT' && lastDir !== 'LEFT') inputQueue.current.push('LEFT');
+    if (dir === 'RIGHT' && lastDir !== 'LEFT' && lastDir !== 'RIGHT') inputQueue.current.push('RIGHT');
   };
 
   return (
@@ -319,14 +360,22 @@ export const Snake: FC = () => {
                     placeholder="Your name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-[#1a1a1c] border border-slate-800 rounded-[4px] px-3 py-2 text-[#e8e8ea] placeholder-slate-655 text-center text-xs font-medium focus:outline-none focus:border-white transition-colors"
+                    className="w-full bg-[#1a1a1c] border border-slate-800 rounded-[4px] px-3 py-2 text-[#e8e8ea] placeholder-slate-655 text-center text-base font-medium focus:outline-none focus:border-white transition-colors"
                   />
-                  <button
-                    onClick={handleSaveScore}
-                    className="w-full bg-white text-black font-bold py-2 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors text-xs uppercase tracking-wider cursor-pointer"
-                  >
-                    Save Score
-                  </button>
+                  <div className="flex gap-2 w-full">
+                    <button
+                      onClick={handleSaveScore}
+                      className="flex-1 bg-white text-black font-bold py-2 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors text-xs uppercase tracking-wider cursor-pointer"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={handleSkipSaveScore}
+                      className="flex-1 bg-[#1a1a1c] text-slate-400 font-bold py-2 rounded-[4px] border border-slate-800 hover:border-slate-500 hover:text-white transition-colors text-xs uppercase tracking-wider cursor-pointer"
+                    >
+                      Skip
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button
