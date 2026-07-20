@@ -1,6 +1,7 @@
 import type { GameMeta } from './types';
 import Snake from '../games/snake/Snake';
 import CosmicDefender from '../games/cosmic-defender/CosmicDefender';
+import BrickBreaker from '../games/brick-breaker/BrickBreaker';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -20,6 +21,15 @@ export const gameRegistry: GameMeta[] = [
     category: 'Arcade',
     controls: ['A/D / Arrow Keys: Move Ship', 'Spacebar: Fire Lasers'],
     component: CosmicDefender,
+  },
+  {
+    id: 'brick_breaker',
+    name: 'Brick Breaker',
+    description: 'Bounce the ball to smash the neon bricks. Don\'t let it drop! Clear the board to score big.',
+    thumbnail: '🧱',
+    category: 'Arcade',
+    controls: ['Left/Right Arrows: Move Paddle', 'Spacebar: Pause game'],
+    component: BrickBreaker,
   },
 ];
 
