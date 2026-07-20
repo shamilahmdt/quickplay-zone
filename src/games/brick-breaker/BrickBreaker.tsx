@@ -41,7 +41,6 @@ export const BrickBreaker: FC = () => {
   const paddleWidth = 80;
   const paddleHeight = 10;
   const ballRadius = 6;
-  const brickRowCount = difficulty === 'EASY' ? 4 : difficulty === 'MEDIUM' ? 6 : 8;
   const brickColumnCount = 7;
   const brickWidth = 50;
   const brickHeight = 16;
