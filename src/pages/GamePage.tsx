@@ -66,17 +66,8 @@ export const GamePage: FC = () => {
       </div>
 
       {/* Dynamic Game Wrapper */}
-      <div className={`flex-1 flex items-center justify-center border rounded-[4px] p-4 md:p-8 shadow-inner relative overflow-hidden transition-colors ${dark ? 'bg-black/20 border-slate-800' : 'bg-slate-50 border-slate-200'
-        }`}>
-        {/* Subtle Speed lines background */}
-        <div className={`absolute inset-x-0 top-1/4 h-[1px] animate-speed-streak-slow pointer-events-none ${dark ? 'bg-slate-900' : 'bg-slate-200'
-          }`} />
-        <div className={`absolute inset-x-0 bottom-1/4 h-[1px] animate-speed-streak-2 pointer-events-none ${dark ? 'bg-slate-900' : 'bg-slate-200'
-          }`} />
-
-        <div className="relative z-10 w-full">
-          <GameComponent />
-        </div>
+      <div className="relative w-full flex justify-center z-10">
+        <GameComponent />
       </div>
 
       {/* Game Details Card */}

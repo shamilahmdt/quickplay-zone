@@ -62,10 +62,16 @@ export const CosmicDefender: FC = () => {
   const lastShotTime = useRef<number>(0);
   const spawnTimer = useRef<number>(0);
 
-  // Load highscore
+  // Load highscore when settings change
   useEffect(() => {
-    const stats = storage.getGameStats('cosmic_defender');
+    const modeKey = `cosmic_defender_${difficulty.toLowerCase()}`;
+    const stats = storage.getGameStats(modeKey);
     setHighScore(stats.highScore);
+    setLeaderboard(storage.getLeaderboard(modeKey));
+  }, [difficulty]);
+
+  // Increment overall play count on mount
+  useEffect(() => {
     storage.incrementPlayCount('cosmic_defender');
   }, []);
 
@@ -110,6 +116,20 @@ export const CosmicDefender: FC = () => {
     setGameStatus('PLAYING');
   };
 
+  const quitGame = () => {
+    playerX.current = 200;
+    bullets.current = [];
+    enemies.current = [];
+    particles.current = [];
+    setScore(0);
+    setLives(3);
+    setShowNamePrompt(false);
+    setName('');
+    lastShotTime.current = 0;
+    spawnTimer.current = 0;
+    setGameStatus('IDLE');
+  };
+
   const shootBullet = () => {
     const settings = getDifficultySettings();
     const now = Date.now();
@@ -124,21 +144,25 @@ export const CosmicDefender: FC = () => {
   };
 
   const handleSaveScore = () => {
-    storage.addLeaderboardScore('cosmic_defender', {
+    const modeKey = `cosmic_defender_${difficulty.toLowerCase()}`;
+    storage.addLeaderboardScore(modeKey, {
       playerName: name.trim() || 'Anonymous Defender',
       score: score,
     });
-    setLeaderboard(storage.getLeaderboard('cosmic_defender'));
+    storage.updateHighScore('cosmic_defender', score); // Sync to dashboard overall highscore
+    setLeaderboard(storage.getLeaderboard(modeKey));
     setShowNamePrompt(false);
     setName('');
   };
 
   const handleSkipSaveScore = () => {
-    storage.addLeaderboardScore('cosmic_defender', {
+    const modeKey = `cosmic_defender_${difficulty.toLowerCase()}`;
+    storage.addLeaderboardScore(modeKey, {
       playerName: 'Anonymous Defender',
       score: score,
     });
-    setLeaderboard(storage.getLeaderboard('cosmic_defender'));
+    storage.updateHighScore('cosmic_defender', score); // Sync to dashboard overall highscore
+    setLeaderboard(storage.getLeaderboard(modeKey));
     setShowNamePrompt(false);
     setName('');
   };
@@ -325,16 +349,18 @@ export const CosmicDefender: FC = () => {
               const nextLives = l - 1;
               if (nextLives <= 0) {
                 setGameStatus('GAME_OVER');
-                const currentLeaderboard = storage.getLeaderboard('cosmic_defender');
+                const modeKey = `cosmic_defender_${difficulty.toLowerCase()}`;
+                const currentLeaderboard = storage.getLeaderboard(modeKey);
                 const qualifies = score > 0 && (currentLeaderboard.length < 3 || score > (currentLeaderboard[2]?.score || 0));
                 if (qualifies) {
                   setShowNamePrompt(true);
                 } else if (score > 0) {
-                  storage.addLeaderboardScore('cosmic_defender', {
+                  storage.addLeaderboardScore(modeKey, {
                     playerName: 'Anonymous Defender',
                     score: score,
                   });
-                  setLeaderboard(storage.getLeaderboard('cosmic_defender'));
+                  storage.updateHighScore('cosmic_defender', score); // Sync to dashboard overall highscore
+                  setLeaderboard(storage.getLeaderboard(modeKey));
                 }
               }
               return nextLives;
@@ -407,7 +433,7 @@ export const CosmicDefender: FC = () => {
       {/* Game board column */}
       <div className="flex-1 flex flex-col items-center">
         {/* Game Stats Hub */}
-        <div className="flex justify-between items-center w-full max-w-[400px] mb-4 bg-[#1a1a1c] border border-slate-800 p-4 rounded-[4px]">
+        <div className="flex justify-between items-center w-full max-w-[480px] mb-4 bg-[#1a1a1c] border border-slate-800 p-4 rounded-[4px]">
           <div>
             <div className="text-xs text-slate-550 font-semibold mb-0.5 flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-slate-500" /> Lives
@@ -436,7 +462,7 @@ export const CosmicDefender: FC = () => {
         </div>
 
         {/* Board & Controls Wrapper */}
-        <div className="w-full max-w-[400px] flex flex-col items-center">
+        <div className="w-full max-w-[480px] flex flex-col items-center">
           {/* Board Canvas container */}
           <div className="relative border border-slate-800 rounded-[4px] overflow-hidden bg-[#09090b] w-full">
             <canvas
@@ -465,14 +491,22 @@ export const CosmicDefender: FC = () => {
             )}
 
             {gameStatus === 'PAUSED' && (
-              <div className="absolute inset-0 bg-[#121214]/95 flex flex-col items-center justify-center">
-                <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-wider">Mission Paused</h3>
-                <button
-                  onClick={() => setGameStatus('PLAYING')}
-                  className="flex items-center gap-2 bg-white text-black font-bold px-6 py-2.5 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" /> Resume Mission
-                </button>
+              <div className="absolute inset-0 bg-[#121214]/95 flex flex-col items-center justify-center p-6 gap-4 animate-fade-in">
+                <h3 className="text-lg font-bold text-white uppercase tracking-wider">Mission Paused</h3>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setGameStatus('PLAYING')}
+                    className="flex items-center gap-2 bg-white text-black font-bold px-5 py-2.5 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" /> Resume
+                  </button>
+                  <button
+                    onClick={quitGame}
+                    className="flex items-center gap-2 bg-[#1a1a1c] text-slate-400 font-bold px-5 py-2.5 rounded-[4px] border border-slate-800 hover:border-slate-500 hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> Abort
+                  </button>
+                </div>
               </div>
             )}
 
@@ -587,7 +621,7 @@ export const CosmicDefender: FC = () => {
                   key={diff}
                   type="button"
                   onClick={() => setDifficulty(diff)}
-                  disabled={gameStatus === 'PLAYING'}
+                  disabled={gameStatus === 'PLAYING' || gameStatus === 'PAUSED'}
                   className={`flex-1 py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                     difficulty === diff
                       ? 'bg-white text-black border-white'
