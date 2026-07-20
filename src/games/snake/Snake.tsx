@@ -13,6 +13,7 @@ export const Snake: FC = () => {
     { x: 10, y: 12 },
   ]);
   const [food, setFood] = useState<Position>({ x: 10, y: 5 });
+  const [foodType, setFoodType] = useState<'normal' | 'golden'>('normal');
   const [, setDirection] = useState<Direction>('UP');
   const [gameStatus, setGameStatus] = useState<'IDLE' | 'PLAYING' | 'PAUSED' | 'GAME_OVER'>('IDLE');
   
@@ -33,10 +34,16 @@ export const Snake: FC = () => {
   const directionRef = useRef<Direction>('UP');
   const inputQueue = useRef<Direction[]>([]);
 
-  // Load highscore
+  // Load highscore when settings change
   useEffect(() => {
-    const stats = storage.getGameStats('snake');
+    const modeKey = `snake_${difficulty.toLowerCase()}_${wallMode ? 'solid' : 'wrap'}`;
+    const stats = storage.getGameStats(modeKey);
     setHighScore(stats.highScore);
+    setLeaderboard(storage.getLeaderboard(modeKey));
+  }, [difficulty, wallMode]);
+
+  // Increment overall play count on mount
+  useEffect(() => {
     storage.incrementPlayCount('snake');
   }, []);
 
@@ -123,17 +130,19 @@ export const Snake: FC = () => {
 
         if ((wallMode && hitWall) || hitSelf) {
           setGameStatus('GAME_OVER');
-          const currentLeaderboard = storage.getLeaderboard('snake');
+          const modeKey = `snake_${difficulty.toLowerCase()}_${wallMode ? 'solid' : 'wrap'}`;
+          const currentLeaderboard = storage.getLeaderboard(modeKey);
           const qualifiesForTop3 = score > 0 && (currentLeaderboard.length < 3 || score > (currentLeaderboard[2]?.score || 0));
 
           if (qualifiesForTop3) {
             setShowNamePrompt(true);
           } else if (score > 0) {
-            storage.addLeaderboardScore('snake', {
+            storage.addLeaderboardScore(modeKey, {
               playerName: 'Anonymous Player',
               score: score
             });
-            setLeaderboard(storage.getLeaderboard('snake'));
+            storage.updateHighScore('snake', score); // Sync to dashboard overall highscore
+            setLeaderboard(storage.getLeaderboard(modeKey));
           }
           return prevSnake;
         }
@@ -142,8 +151,10 @@ export const Snake: FC = () => {
 
         // Eat food
         if (newHead.x === food.x && newHead.y === food.y) {
+          const isGolden = foodType === 'golden';
+          const points = isGolden ? 30 : 10;
           setScore((s) => {
-            const nextScore = s + 10;
+            const nextScore = s + points;
             if (nextScore > highScore) {
               setHighScore(nextScore);
             }
@@ -155,6 +166,7 @@ export const Snake: FC = () => {
           );
           
           setFood(getRandomPosition(SNAKE_CONFIG.GRID_SIZE, newSnake));
+          setFoodType(Math.random() < 0.2 ? 'golden' : 'normal');
         } else {
           newSnake.pop();
         }
@@ -164,7 +176,7 @@ export const Snake: FC = () => {
     }, speed);
 
     return () => clearInterval(interval);
-  }, [gameStatus, food, speed, score, highScore, wallMode]);
+  }, [gameStatus, food, foodType, speed, score, highScore, wallMode]);
 
   // Canvas drawing
   useEffect(() => {
@@ -198,7 +210,8 @@ export const Snake: FC = () => {
     const cellHeight = canvas.height / SNAKE_CONFIG.GRID_SIZE;
 
     // Draw Food
-    ctx.fillStyle = SNAKE_CONFIG.COLORS.food;
+    const isGolden = foodType === 'golden';
+    ctx.fillStyle = isGolden ? '#f59e0b' : SNAKE_CONFIG.COLORS.food;
     ctx.beginPath();
     const radius = cellWidth / 2 - 2;
     const centerX = food.x * cellWidth + cellWidth / 2;
@@ -206,23 +219,49 @@ export const Snake: FC = () => {
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     ctx.fill();
 
+    if (isGolden) {
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
     // Draw Snake
     snake.forEach((segment, idx) => {
       const isHead = idx === 0;
+      
+      const length = snake.length;
+      const factor = Math.max(0.65, 1 - (idx / length) * 0.35); // shrink down to 65% towards tail
+      const offsetX = (cellWidth - cellWidth * factor) / 2;
+      const offsetY = (cellHeight - cellHeight * factor) / 2;
+
       ctx.fillStyle = isHead ? SNAKE_CONFIG.COLORS.snakeHead : SNAKE_CONFIG.COLORS.snakeBody;
       
-      const x = segment.x * cellWidth + 1;
-      const y = segment.y * cellHeight + 1;
-      const w = cellWidth - 2;
-      const h = cellHeight - 2;
+      const x = segment.x * cellWidth + 1 + offsetX;
+      const y = segment.y * cellHeight + 1 + offsetY;
+      const w = (cellWidth - 2) * factor;
+      const h = (cellHeight - 2) * factor;
       const r = isHead ? 4 : 2;
 
       ctx.beginPath();
       ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h);
       ctx.fill();
+
+      // Draw eyes on the head
+      if (isHead) {
+        ctx.fillStyle = '#FFFFFF';
+        const eyeSize = cellWidth * 0.15;
+        const dir = directionRef.current;
+        if (dir === 'UP' || dir === 'DOWN') {
+          ctx.fillRect(segment.x * cellWidth + cellWidth * 0.25, segment.y * cellHeight + cellHeight * 0.4, eyeSize, eyeSize);
+          ctx.fillRect(segment.x * cellWidth + cellWidth * 0.65, segment.y * cellHeight + cellHeight * 0.4, eyeSize, eyeSize);
+        } else {
+          ctx.fillRect(segment.x * cellWidth + cellWidth * 0.4, segment.y * cellHeight + cellHeight * 0.25, eyeSize, eyeSize);
+          ctx.fillRect(segment.x * cellWidth + cellWidth * 0.4, segment.y * cellHeight + cellHeight * 0.65, eyeSize, eyeSize);
+        }
+      }
     });
 
-  }, [snake, food]);
+  }, [snake, food, foodType]);
 
   const resetGame = () => {
     setSnake([
@@ -231,6 +270,7 @@ export const Snake: FC = () => {
       { x: 10, y: 12 },
     ]);
     setFood({ x: 10, y: 5 });
+    setFoodType('normal');
     setDirection('UP');
     directionRef.current = 'UP';
     inputQueue.current = [];
@@ -241,27 +281,48 @@ export const Snake: FC = () => {
     setGameStatus('PLAYING');
   };
 
+  const quitGame = () => {
+    setSnake([
+      { x: 10, y: 10 },
+      { x: 10, y: 11 },
+      { x: 10, y: 12 },
+    ]);
+    setFood({ x: 10, y: 5 });
+    setFoodType('normal');
+    setDirection('UP');
+    directionRef.current = 'UP';
+    inputQueue.current = [];
+    setScore(0);
+    setShowNamePrompt(false);
+    setName('');
+    setGameStatus('IDLE');
+  };
+
   const handleDifficultyChange = (diff: 'EASY' | 'MEDIUM' | 'HARD') => {
     setDifficulty(diff);
     setSpeed(SNAKE_CONFIG.DIFFICULTY_SPEEDS[diff]);
   };
 
   const handleSaveScore = () => {
-    storage.addLeaderboardScore('snake', {
+    const modeKey = `snake_${difficulty.toLowerCase()}_${wallMode ? 'solid' : 'wrap'}`;
+    storage.addLeaderboardScore(modeKey, {
       playerName: name.trim() || 'Anonymous Player',
       score: score
     });
-    setLeaderboard(storage.getLeaderboard('snake'));
+    storage.updateHighScore('snake', score); // Sync to dashboard overall highscore
+    setLeaderboard(storage.getLeaderboard(modeKey));
     setShowNamePrompt(false);
     setName('');
   };
 
   const handleSkipSaveScore = () => {
-    storage.addLeaderboardScore('snake', {
+    const modeKey = `snake_${difficulty.toLowerCase()}_${wallMode ? 'solid' : 'wrap'}`;
+    storage.addLeaderboardScore(modeKey, {
       playerName: 'Anonymous Player',
       score: score
     });
-    setLeaderboard(storage.getLeaderboard('snake'));
+    storage.updateHighScore('snake', score); // Sync to dashboard overall highscore
+    setLeaderboard(storage.getLeaderboard(modeKey));
     setShowNamePrompt(false);
     setName('');
   };
@@ -294,7 +355,7 @@ export const Snake: FC = () => {
       {/* Game board column */}
       <div className="flex-1 flex flex-col items-center">
         {/* Game Stats Hub */}
-        <div className="flex justify-between items-center w-full max-w-[400px] mb-4 bg-[#1a1a1c] border border-slate-800 p-4 rounded-[4px]">
+        <div className="flex justify-between items-center w-full max-w-[480px] mb-4 bg-[#1a1a1c] border border-slate-800 p-4 rounded-[4px]">
           <div>
             <div className="text-xs text-slate-550 font-semibold mb-0.5">Score</div>
             <div className="text-xl font-bold text-white">{score}</div>
@@ -308,12 +369,12 @@ export const Snake: FC = () => {
         </div>
 
         {/* Board Canvas container */}
-        <div className="relative border border-slate-800 rounded-[4px] overflow-hidden bg-[#0d0d0f]">
+        <div className="relative border border-slate-800 rounded-[4px] overflow-hidden bg-[#0d0d0f] w-full max-w-[480px]">
           <canvas
             ref={canvasRef}
             width={400}
             height={400}
-            className="block max-w-full aspect-square"
+            className="block w-full aspect-square"
           />
 
           {/* Overlays */}
@@ -333,14 +394,22 @@ export const Snake: FC = () => {
           )}
 
           {gameStatus === 'PAUSED' && (
-            <div className="absolute inset-0 bg-[#121214]/95 flex flex-col items-center justify-center">
-              <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-wider">Paused</h3>
-              <button
-                onClick={() => setGameStatus('PLAYING')}
-                className="flex items-center gap-2 bg-white text-black font-bold px-6 py-2.5 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" /> Resume
-              </button>
+            <div className="absolute inset-0 bg-[#121214]/95 flex flex-col items-center justify-center p-6 gap-4">
+              <h3 className="text-lg font-bold text-white uppercase tracking-wider">Paused</h3>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setGameStatus('PLAYING')}
+                  className="flex items-center gap-2 bg-white text-black font-bold px-5 py-2.5 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" /> Resume
+                </button>
+                <button
+                  onClick={quitGame}
+                  className="flex items-center gap-2 bg-[#1a1a1c] text-slate-400 font-bold px-5 py-2.5 rounded-[4px] border border-slate-800 hover:border-slate-500 hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Quit
+                </button>
+              </div>
             </div>
           )}
 
@@ -453,7 +522,7 @@ export const Snake: FC = () => {
                   key={diff}
                   type="button"
                   onClick={() => handleDifficultyChange(diff)}
-                  disabled={gameStatus === 'PLAYING'}
+                  disabled={gameStatus === 'PLAYING' || gameStatus === 'PAUSED'}
                   className={`flex-1 py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                     difficulty === diff
                       ? 'bg-white text-black border-white'
@@ -475,7 +544,7 @@ export const Snake: FC = () => {
               <button
                 type="button"
                 onClick={() => setWallMode(true)}
-                disabled={gameStatus === 'PLAYING'}
+                disabled={gameStatus === 'PLAYING' || gameStatus === 'PAUSED'}
                 className={`flex-1 py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                   wallMode
                     ? 'bg-white text-black border-white'
@@ -487,7 +556,7 @@ export const Snake: FC = () => {
               <button
                 type="button"
                 onClick={() => setWallMode(false)}
-                disabled={gameStatus === 'PLAYING'}
+                disabled={gameStatus === 'PLAYING' || gameStatus === 'PAUSED'}
                 className={`flex-1 py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                   !wallMode
                     ? 'bg-white text-black border-white'
@@ -496,6 +565,21 @@ export const Snake: FC = () => {
               >
                 Screen Wrap
               </button>
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="border-t border-slate-800/40 pt-3.5">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Board Legend</span>
+            <div className="space-y-2 text-[10px] font-semibold text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] inline-block shrink-0" />
+                <span>Normal Apple (+10 pts)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b] border border-white inline-block shrink-0 animate-pulse" />
+                <span>Golden Nugget (+30 pts)</span>
+              </div>
             </div>
           </div>
         </div>

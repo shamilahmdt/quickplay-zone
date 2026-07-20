@@ -2,6 +2,18 @@
 
 QuickPlay Zone is a fast, minimal, offline-first web arcade cockpit designed to run retro games instantly in your browser. With zero accounts, downloads, or bloated frameworks, session stats and high scores are preserved locally.
 
+## 🚀 Live Demo
+
+Experience QuickPlay Zone live at: **[https://quickplay-zone.vercel.app/](https://quickplay-zone.vercel.app/)**
+
+---
+
+## 🛠️ Check Out My Other Project
+
+**DevTasks Workspace** — [Live Demo](https://dev-tasks-beta.vercel.app/) · [Repository](https://github.com/shamilahmdt/devtasks)
+
+[![DevTasks](https://img.shields.io/badge/Check_Out-DevTasks-black?style=flat-square&logo=vercel)](https://dev-tasks-beta.vercel.app/)
+
 ---
 
 ## 🚀 Key Features

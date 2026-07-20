@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { Cpu, Save, Users, Zap } from 'lucide-react';
+import { Cpu, Save, Users, Zap, Github, ExternalLink, Terminal } from 'lucide-react';
 
 export const About: FC = () => {
   const { dark } = useTheme();
@@ -72,6 +72,43 @@ export const About: FC = () => {
         </div>
       </section>
 
+      {/* Featured Project / Collaboration */}
+      <section
+        className={`border p-6 rounded-[4px] transition-colors ${
+          dark ? 'bg-[#1a1a1c] border-slate-800' : 'bg-white border-slate-200'
+        }`}
+      >
+        <h3 className="text-sm font-bold uppercase tracking-wide mb-3 flex items-center gap-2">
+          <Terminal className="w-5 h-5 text-indigo-500" />
+          <span>DevTasks Workspace</span>
+        </h3>
+        <p className={`text-xs leading-relaxed mb-4 ${dark ? 'text-slate-400' : 'text-slate-600'}`}>
+          DevTasks is a unified offline-first developer cockpit and workspace designed to organize task roadmaps, vault secure snippets, bookmark curated resource links, and run local client-side dev utilities.
+        </p>
+        <div className="flex gap-4">
+          <a
+            href="https://dev-tasks-beta.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-bold uppercase tracking-wider text-indigo-500 hover:text-indigo-400 transition-colors flex items-center gap-1.5"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Launch Dev Workspace</span>
+          </a>
+          <a
+            href="https://github.com/shamilahmdt/devtasks"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`text-xs font-bold uppercase tracking-wider ${
+              dark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-black'
+            } transition-colors flex items-center gap-1.5`}
+          >
+            <Github className="w-3.5 h-3.5" />
+            <span>GitHub Repository</span>
+          </a>
+        </div>
+      </section>
+
       {/* Developer Contribution Guide */}
       <section className={`border p-6 rounded-[4px] transition-colors ${
         dark ? 'bg-[#1a1a1c] border-slate-800' : 'bg-white border-slate-200'
@@ -81,7 +118,7 @@ export const About: FC = () => {
           Want to integrate a game? Follow these fast steps:
         </p>
         <ol className="list-decimal list-inside text-xs text-slate-500 space-y-2 leading-relaxed">
-          <li>Duplicate the <code className={dark ? 'text-slate-350' : 'text-slate-800'}>src/games/_template/</code> directory.</li>
+          <li>Duplicate the <code className={dark ? 'text-slate-355' : 'text-slate-800'}>src/games/_template/</code> directory.</li>
           <li>Write your core gameplay component in the new directory.</li>
           <li>Connect stats via the <code className={dark ? 'text-slate-355' : 'text-slate-800'}>storage</code> utilities.</li>
           <li>Export your component and register it inside <code className={dark ? 'text-slate-355' : 'text-slate-800'}>src/core/gameRegistry.ts</code>.</li>

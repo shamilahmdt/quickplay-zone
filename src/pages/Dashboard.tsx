@@ -1,12 +1,23 @@
+import { useState } from 'react';
 import type { FC } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Search } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { gameRegistry } from '../core/gameRegistry';
 import GameCard from '../components/ui/GameCard';
 
 export const Dashboard: FC = () => {
   const { dark } = useTheme();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const matches = gameRegistry.filter((game) =>
+    game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    game.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    game.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const hasNoMatches = searchQuery.trim() !== '' && matches.length === 0;
+  const gamesToDisplay = hasNoMatches ? gameRegistry : matches;
 
   return (
     <div className={`flex-1 flex flex-col gap-8 p-6 md:p-8 transition-colors duration-300 ${
@@ -20,7 +31,7 @@ export const Dashboard: FC = () => {
               to="/"
               className={`p-2 border rounded-[4px] transition-all cursor-pointer ${dark
                   ? 'bg-[#1a1a1c] border-slate-800 text-slate-400 hover:text-white hover:border-white'
-                  : 'bg-white border-slate-200 text-slate-650 hover:text-black hover:border-black'
+                  : 'bg-white border-slate-200 text-slate-655 hover:text-black hover:border-black'
                 }`}
               title="Back to Home"
             >
@@ -35,10 +46,36 @@ export const Dashboard: FC = () => {
               </h1>
             </div>
           </div>
+
+          {/* Search Box */}
+          <div className="relative w-full sm:w-64">
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${dark ? 'text-slate-600' : 'text-slate-400'}`} />
+            <input
+              type="text"
+              placeholder="Search arcade..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full pl-9 pr-3 py-1.5 border rounded-[4px] text-xs font-medium focus:outline-none transition-colors ${
+                dark
+                  ? 'bg-[#1a1a1c] border-slate-800 text-[#e8e8ea] focus:border-white placeholder-slate-600'
+                  : 'bg-white border-slate-200 text-slate-900 focus:border-black placeholder-slate-400'
+              }`}
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {gameRegistry.map((game) => (
+        {hasNoMatches && (
+          <div className={`p-3 rounded-[4px] border text-xs font-semibold transition-colors ${
+            dark 
+              ? 'bg-amber-950/20 border-amber-900/40 text-amber-400' 
+              : 'bg-amber-50 border-amber-200 text-amber-800'
+          }`}>
+            No games found matching "{searchQuery}". Showing all available games instead.
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-6">
+          {gamesToDisplay.map((game) => (
             <GameCard key={game.id} game={game} />
           ))}
         </div>
