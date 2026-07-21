@@ -1,59 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
+import { COSMIC_DEFENDER_CONFIG } from './cosmic-defender.config';
+import type { Difficulty, Bullet, Enemy, Particle, Star } from './cosmic-defender.logic';
+import { createStarfield, createExplosionParticles, generateEnemy } from './cosmic-defender.logic';
 import { storage } from '../../core/storage';
 import { Award, Play, Pause, RotateCcw, Shield, Rocket } from 'lucide-react';
-
-interface Bullet {
-  x: number;
-  y: number;
-  speed: number;
-}
-
-interface Enemy {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  speed: number;
-  points: number;
-  color: string;
-}
-
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  color: string;
-  alpha: number;
-  decay: number;
-  size: number;
-}
-
-interface Star {
-  x: number;
-  y: number;
-  size: number;
-  speed: number;
-}
 
 export const CosmicDefender: FC = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [gameStatus, setGameStatus] = useState<'IDLE' | 'PLAYING' | 'PAUSED' | 'GAME_OVER'>('IDLE');
-  const [leaderboard, setLeaderboard] = useState(storage.getLeaderboard('cosmic_defender'));
+  
+  // Difficulty configurations
+  const [difficulty, setDifficulty] = useState<Difficulty>('MEDIUM');
+  const [leaderboard, setLeaderboard] = useState(
+    storage.getLeaderboard(`cosmic_defender_${difficulty.toLowerCase()}`)
+  );
+
   const [name, setName] = useState('');
   const [showNamePrompt, setShowNamePrompt] = useState(false);
-
-  // Difficulty configurations
-  const [difficulty, setDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameId = useRef<number | null>(null);
 
   // Entities as refs for fast updates inside canvas loop
-  const playerX = useRef<number>(200);
+  const playerX = useRef<number>(COSMIC_DEFENDER_CONFIG.CANVAS_WIDTH / 2);
   const keysPressed = useRef<{ [key: string]: boolean }>({});
   const bullets = useRef<Bullet[]>([]);
   const enemies = useRef<Enemy[]>([]);
@@ -76,34 +48,16 @@ export const CosmicDefender: FC = () => {
   }, []);
 
   const getDifficultySettings = () => {
-    switch (difficulty) {
-      case 'EASY':
-        return { enemySpeed: 1.0, spawnRate: 110, shootCooldown: 80 };
-      case 'HARD':
-        return { enemySpeed: 3.5, spawnRate: 40, shootCooldown: 180 };
-      case 'MEDIUM':
-      default:
-        return { enemySpeed: 2.0, spawnRate: 70, shootCooldown: 130 };
-    }
+    return COSMIC_DEFENDER_CONFIG.DIFFICULTY_SETTINGS[difficulty];
   };
 
   const spawnParticles = (x: number, y: number, color: string) => {
-    for (let i = 0; i < 15; i++) {
-      particles.current.push({
-        x,
-        y,
-        vx: (Math.random() - 0.5) * 5,
-        vy: (Math.random() - 0.5) * 5,
-        color,
-        alpha: 1,
-        decay: Math.random() * 0.03 + 0.01,
-        size: Math.random() * 3 + 1,
-      });
-    }
+    const newParticles = createExplosionParticles(x, y, color);
+    particles.current.push(...newParticles);
   };
 
   const resetGame = () => {
-    playerX.current = 200;
+    playerX.current = COSMIC_DEFENDER_CONFIG.CANVAS_WIDTH / 2;
     bullets.current = [];
     enemies.current = [];
     particles.current = [];
@@ -117,7 +71,7 @@ export const CosmicDefender: FC = () => {
   };
 
   const quitGame = () => {
-    playerX.current = 200;
+    playerX.current = COSMIC_DEFENDER_CONFIG.CANVAS_WIDTH / 2;
     bullets.current = [];
     enemies.current = [];
     particles.current = [];
@@ -136,8 +90,8 @@ export const CosmicDefender: FC = () => {
     if (now - lastShotTime.current > settings.shootCooldown) {
       bullets.current.push({
         x: playerX.current,
-        y: 350,
-        speed: 7,
+        y: COSMIC_DEFENDER_CONFIG.PLAYER_Y,
+        speed: COSMIC_DEFENDER_CONFIG.BULLET_SPEED,
       });
       lastShotTime.current = now;
     }
@@ -149,7 +103,7 @@ export const CosmicDefender: FC = () => {
       playerName: name.trim() || 'Anonymous Defender',
       score: score,
     });
-    storage.updateHighScore('cosmic_defender', score); // Sync to dashboard overall highscore
+    storage.updateHighScore(modeKey, score);
     setLeaderboard(storage.getLeaderboard(modeKey));
     setShowNamePrompt(false);
     setName('');
@@ -161,7 +115,7 @@ export const CosmicDefender: FC = () => {
       playerName: 'Anonymous Defender',
       score: score,
     });
-    storage.updateHighScore('cosmic_defender', score); // Sync to dashboard overall highscore
+    storage.updateHighScore(modeKey, score);
     setLeaderboard(storage.getLeaderboard(modeKey));
     setShowNamePrompt(false);
     setName('');
@@ -169,18 +123,11 @@ export const CosmicDefender: FC = () => {
 
   // Setup stars background once
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const initialStars: Star[] = [];
-    for (let i = 0; i < 50; i++) {
-      initialStars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 2 + 0.5,
-        speed: Math.random() * 1.5 + 0.5,
-      });
-    }
-    stars.current = initialStars;
+    stars.current = createStarfield(
+      COSMIC_DEFENDER_CONFIG.CANVAS_WIDTH,
+      COSMIC_DEFENDER_CONFIG.CANVAS_HEIGHT,
+      COSMIC_DEFENDER_CONFIG.STAR_COUNT
+    );
   }, []);
 
   // Keyboard listeners
@@ -224,7 +171,7 @@ export const CosmicDefender: FC = () => {
 
     const updateAndDraw = () => {
       // Clear screen
-      ctx.fillStyle = '#09090b';
+      ctx.fillStyle = COSMIC_DEFENDER_CONFIG.COLORS.boardBg;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // 1. Draw Stars background
@@ -243,17 +190,17 @@ export const CosmicDefender: FC = () => {
       if (gameStatus === 'PLAYING') {
         // 2. Handle Player Input
         if (keysPressed.current['ArrowLeft'] || keysPressed.current['KeyA']) {
-          playerX.current = Math.max(20, playerX.current - 5);
+          playerX.current = Math.max(20, playerX.current - COSMIC_DEFENDER_CONFIG.PLAYER_SPEED);
         }
         if (keysPressed.current['ArrowRight'] || keysPressed.current['KeyD']) {
-          playerX.current = Math.min(canvas.width - 20, playerX.current + 5);
+          playerX.current = Math.min(canvas.width - 20, playerX.current + COSMIC_DEFENDER_CONFIG.PLAYER_SPEED);
         }
         if (keysPressed.current['Space']) {
           shootBullet();
         }
 
         // 3. Update & Draw Bullets
-        ctx.strokeStyle = '#22d3ee'; // cyan-400
+        ctx.strokeStyle = COSMIC_DEFENDER_CONFIG.COLORS.bullet;
         ctx.lineWidth = 3;
         bullets.current.forEach((b, idx) => {
           b.y -= b.speed;
@@ -272,42 +219,14 @@ export const CosmicDefender: FC = () => {
         spawnTimer.current++;
         if (spawnTimer.current >= settings.spawnRate) {
           spawnTimer.current = 0;
-          const enemyType = Math.random();
-          let width = 20;
-          let height = 15;
-          let points = 50;
-          let color = '#ec4899'; // pink-500
-
-          if (enemyType < 0.2) {
-            // Gold speedster enemy
-            width = 16;
-            height = 12;
-            points = 150;
-            color = '#f59e0b'; // amber-500
-          } else if (enemyType < 0.4) {
-            // Heavy green enemy
-            width = 28;
-            height = 20;
-            points = 80;
-            color = '#10b981'; // emerald-500
-          }
-
-          enemies.current.push({
-            x: Math.random() * (canvas.width - 40) + 20,
-            y: -20,
-            width,
-            height,
-            speed: settings.enemySpeed * (enemyType < 0.2 ? 1.5 : enemyType < 0.4 ? 0.75 : 1),
-            points,
-            color,
-          });
+          enemies.current.push(generateEnemy(canvas.width, settings.enemySpeed));
         }
 
         // 5. Update & Draw Enemies
         enemies.current.forEach((enemy, eIdx) => {
           enemy.y += enemy.speed;
 
-          // Draw Enemy spaceship (triangle/polygon shape)
+          // Draw Enemy spaceship (triangle shape)
           ctx.fillStyle = enemy.color;
           ctx.beginPath();
           ctx.moveTo(enemy.x, enemy.y + enemy.height);
@@ -316,7 +235,7 @@ export const CosmicDefender: FC = () => {
           ctx.closePath();
           ctx.fill();
 
-          // Neon glow style lines on alien ships
+          // Neon lines on alien ships
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 1;
           ctx.beginPath();
@@ -359,7 +278,7 @@ export const CosmicDefender: FC = () => {
                     playerName: 'Anonymous Defender',
                     score: score,
                   });
-                  storage.updateHighScore('cosmic_defender', score); // Sync to dashboard overall highscore
+                  storage.updateHighScore(modeKey, score);
                   setLeaderboard(storage.getLeaderboard(modeKey));
                 }
               }
@@ -391,7 +310,7 @@ export const CosmicDefender: FC = () => {
       }
 
       // 7. Draw Player Spaceship
-      ctx.fillStyle = '#f8fafc'; // slate-50
+      ctx.fillStyle = COSMIC_DEFENDER_CONFIG.COLORS.player;
       ctx.beginPath();
       // nose
       ctx.moveTo(playerX.current, 335);
@@ -405,7 +324,7 @@ export const CosmicDefender: FC = () => {
 
       // Wing engines fire/thrusters
       if (gameStatus === 'PLAYING') {
-        ctx.fillStyle = Math.random() > 0.5 ? '#f97316' : '#ef4444'; // Orange/Red pulse
+        ctx.fillStyle = Math.random() > 0.5 ? '#f97316' : '#ef4444';
         ctx.beginPath();
         ctx.moveTo(playerX.current - 8, 357);
         ctx.lineTo(playerX.current - 5, 365 + Math.random() * 5);
@@ -429,13 +348,13 @@ export const CosmicDefender: FC = () => {
   }, [gameStatus, score, highScore, difficulty]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 w-full max-w-5xl mx-auto px-4 py-8">
+    <div className="flex flex-col lg:flex-row gap-8 w-full max-w-5xl mx-auto px-4 py-8 select-none">
       {/* Game board column */}
       <div className="flex-1 flex flex-col items-center">
         {/* Game Stats Hub */}
         <div className="flex justify-between items-center w-full max-w-[480px] mb-4 bg-[#1a1a1c] border border-slate-800 p-4 rounded-[4px]">
           <div>
-            <div className="text-xs text-slate-550 font-semibold mb-0.5 flex items-center gap-1.5">
+            <div className="text-xs text-slate-500 font-semibold mb-0.5 flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-slate-500" /> Lives
             </div>
             <div className="flex gap-1">
@@ -450,14 +369,14 @@ export const CosmicDefender: FC = () => {
             </div>
           </div>
           <div className="text-center">
-            <div className="text-xs text-slate-550 font-semibold mb-0.5">Score</div>
-            <div className="text-xl font-bold text-white">{score}</div>
+            <div className="text-xs text-slate-500 font-semibold mb-0.5">Score</div>
+            <div className="text-xl font-bold text-white font-mono">{score}</div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-slate-550 font-semibold mb-0.5 flex items-center justify-end gap-1">
+            <div className="text-xs text-slate-500 font-semibold mb-0.5 flex items-center justify-end gap-1">
               <Award className="w-3.5 h-3.5 text-slate-500" /> Best Score
             </div>
-            <div className="text-xl font-bold text-white">{highScore}</div>
+            <div className="text-xl font-bold text-white font-mono">{highScore}</div>
           </div>
         </div>
 
@@ -467,8 +386,8 @@ export const CosmicDefender: FC = () => {
           <div className="relative border border-slate-800 rounded-[4px] overflow-hidden bg-[#09090b] w-full">
             <canvas
               ref={canvasRef}
-              width={400}
-              height={400}
+              width={COSMIC_DEFENDER_CONFIG.CANVAS_WIDTH}
+              height={COSMIC_DEFENDER_CONFIG.CANVAS_HEIGHT}
               className="block w-full aspect-square"
             />
 
@@ -491,7 +410,7 @@ export const CosmicDefender: FC = () => {
             )}
 
             {gameStatus === 'PAUSED' && (
-              <div className="absolute inset-0 bg-[#121214]/95 flex flex-col items-center justify-center p-6 gap-4 animate-fade-in">
+              <div className="absolute inset-0 bg-[#121214]/95 flex flex-col items-center justify-center p-6 gap-4 animate-fade-in z-20">
                 <h3 className="text-lg font-bold text-white uppercase tracking-wider">Mission Paused</h3>
                 <div className="flex gap-3">
                   <button
@@ -513,11 +432,11 @@ export const CosmicDefender: FC = () => {
             {gameStatus === 'GAME_OVER' && (
               <div className="absolute inset-0 bg-[#121214]/95 flex flex-col items-center justify-center p-6 text-center z-20">
                 <h3 className="text-lg font-bold text-red-500 mb-2 uppercase tracking-wider">Shield Defeated</h3>
-                <p className="text-slate-400 mb-4 font-medium">Aliens eliminated score: {score}</p>
+                <p className="text-slate-400 mb-4 font-medium">Aliens eliminated score: <span className="text-white">{score}</span></p>
 
                 {showNamePrompt ? (
                   <div className="w-full max-w-xs flex flex-col gap-3">
-                    <div className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                       New High Score! Enter Defender Name
                     </div>
                     <input
@@ -526,7 +445,7 @@ export const CosmicDefender: FC = () => {
                       placeholder="Your name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-[#1a1a1c] border border-slate-800 rounded-[4px] px-3 py-2 text-[#e8e8ea] placeholder-slate-655 text-center text-base font-medium focus:outline-none focus:border-white transition-colors"
+                      className="w-full bg-[#1a1a1c] border border-slate-800 rounded-[4px] px-3 py-2 text-[#e8e8ea] placeholder-slate-600 text-center text-base font-medium focus:outline-none focus:border-white transition-colors"
                     />
                     <div className="flex gap-2 w-full">
                       <button
@@ -610,7 +529,7 @@ export const CosmicDefender: FC = () => {
       <div className="w-full lg:w-80 flex flex-col gap-6">
         {/* Real-time Settings Panel */}
         <div className="bg-[#1a1a1c] border border-slate-800 rounded-[4px] p-6 flex flex-col gap-4">
-          <h3 className="text-xs font-bold text-slate-455 uppercase tracking-wider flex items-center gap-1.5">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
             Settings
           </h3>
 
@@ -637,39 +556,39 @@ export const CosmicDefender: FC = () => {
 
         {/* Controls Info */}
         <div className="hidden lg:block bg-[#1a1a1c] border border-slate-800 rounded-[4px] p-6">
-          <h3 className="text-xs font-bold text-slate-455 uppercase tracking-wider mb-4">Tactical Controls</h3>
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Tactical Controls</h3>
           <ul className="text-xs space-y-3 text-slate-400">
             <li className="flex justify-between items-center border-b border-slate-900 pb-2">
               <span>Steer Ship Left</span>
-              <kbd className="bg-black/50 border border-slate-850 px-2 py-0.5 rounded-[4px] text-[#e8e8ea] text-[10px] font-mono">A / ◀</kbd>
+              <kbd className="bg-black/50 border border-slate-800 px-2 py-0.5 rounded-[4px] text-[#e8e8ea] text-[10px] font-mono">A / ◀</kbd>
             </li>
             <li className="flex justify-between items-center border-b border-slate-900 pb-2">
               <span>Steer Ship Right</span>
-              <kbd className="bg-black/50 border border-slate-850 px-2 py-0.5 rounded-[4px] text-[#e8e8ea] text-[10px] font-mono">D / ▶</kbd>
+              <kbd className="bg-black/50 border border-slate-800 px-2 py-0.5 rounded-[4px] text-[#e8e8ea] text-[10px] font-mono">D / ▶</kbd>
             </li>
             <li className="flex justify-between items-center border-b border-slate-900 pb-2">
               <span>Fire Weapon Systems</span>
-              <kbd className="bg-black/50 border border-slate-850 px-2 py-0.5 rounded-[4px] text-[#e8e8ea] text-[10px] font-mono">Space</kbd>
+              <kbd className="bg-black/50 border border-slate-800 px-2 py-0.5 rounded-[4px] text-[#e8e8ea] text-[10px] font-mono">Space</kbd>
             </li>
           </ul>
         </div>
 
         {/* Leaderboard */}
         <div className="bg-[#1a1a1c] border border-slate-800 rounded-[4px] p-6 flex-1 flex flex-col">
-          <h3 className="text-xs font-bold text-slate-455 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
             <Award className="w-4 h-4 text-slate-500" /> High Score Logs
           </h3>
           <div className="flex-1 overflow-y-auto max-h-[250px] space-y-2 pr-1">
             {leaderboard.length === 0 ? (
               <p className="text-xs text-slate-500 italic text-center py-6">No mission logs yet.</p>
             ) : (
-              leaderboard.slice(0, 3).map((entry, idx) => (
+              leaderboard.slice(0, 5).map((entry, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between py-2 px-3 bg-black/20 border border-slate-850 rounded-[4px]"
+                  className="flex items-center justify-between py-2 px-3 bg-black/20 border border-slate-800 rounded-[4px]"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold font-mono text-slate-555">
+                    <span className="text-[10px] font-bold font-mono text-slate-500">
                       {String(idx + 1).padStart(2, '0')}
                     </span>
                     <span className="text-xs font-semibold text-slate-300 truncate max-w-[120px]">{entry.playerName}</span>
