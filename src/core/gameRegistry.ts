@@ -2,6 +2,7 @@ import type { GameMeta } from './types';
 import Snake from '../games/snake/Snake';
 import CosmicDefender from '../games/cosmic-defender/CosmicDefender';
 import BrickBreaker from '../games/brick-breaker/BrickBreaker';
+import SimonSays from '../games/simon-says/SimonSays';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -30,6 +31,15 @@ export const gameRegistry: GameMeta[] = [
     category: 'Arcade',
     controls: ['Left/Right Arrows: Move Paddle', 'Spacebar: Pause game'],
     component: BrickBreaker,
+  },
+  {
+    id: 'simon_says',
+    name: 'Simon Says',
+    description: 'Watch the pattern, repeat the sequence — how far can you go? A classic memory game with retro vibes.',
+    thumbnail: '🎵',
+    category: 'Memory',
+    controls: ['Tap tiles: Repeat sequence', 'Sound toggle: Top left'],
+    component: SimonSays,
   },
 ];
 
