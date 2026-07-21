@@ -14,7 +14,7 @@ export const BOARD_MODELS_INFO: { id: BoardModel; name: string; description: str
   { id: 'ROOMS', name: '4 Chambers', description: 'Divided room walls with wide doorway corridors' },
 ];
 
-export const generateObstacles = (model: BoardModel, gridSize = 20): Position[] => {
+export const generateObstacles = (model: BoardModel, _gridSize = 20): Position[] => {
   const rawObstacles: Position[] = [];
 
   switch (model) {
