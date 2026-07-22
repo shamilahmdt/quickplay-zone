@@ -4,13 +4,27 @@ import { COSMIC_DEFENDER_CONFIG } from './cosmic-defender.config';
 import type { Difficulty, Bullet, Enemy, Particle, Star } from './cosmic-defender.logic';
 import { createStarfield, createExplosionParticles, generateEnemy } from './cosmic-defender.logic';
 import { storage } from '../../core/storage';
-import { Award, Play, Pause, RotateCcw, Shield, Rocket } from 'lucide-react';
+import { Award, Play, Pause, RotateCcw, Shield, Rocket, Volume2, VolumeX } from 'lucide-react';
+import { audio } from '../../core/audio';
 
 export const CosmicDefender: FC = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [gameStatus, setGameStatus] = useState<'IDLE' | 'PLAYING' | 'PAUSED' | 'GAME_OVER'>('IDLE');
+  const [muted, setMuted] = useState(audio.getMuted());
+
+  // Manage BGM loop based on game status
+  useEffect(() => {
+    if (gameStatus === 'PLAYING') {
+      audio.startBgm('cosmic');
+    } else {
+      audio.stopBgm();
+    }
+    return () => {
+      audio.stopBgm();
+    };
+  }, [gameStatus]);
   
   // Difficulty configurations
   const [difficulty, setDifficulty] = useState<Difficulty>('MEDIUM');
@@ -94,6 +108,7 @@ export const CosmicDefender: FC = () => {
         speed: COSMIC_DEFENDER_CONFIG.BULLET_SPEED,
       });
       lastShotTime.current = now;
+      audio.playLaser();
     }
   };
 
@@ -253,6 +268,7 @@ export const CosmicDefender: FC = () => {
               spawnParticles(enemy.x, enemy.y + enemy.height / 2, enemy.color);
               enemies.current.splice(eIdx, 1);
               bullets.current.splice(bIdx, 1);
+              audio.playExplosion();
               setScore((s) => {
                 const nextScore = s + enemy.points;
                 if (nextScore > highScore) setHighScore(nextScore);
@@ -268,6 +284,7 @@ export const CosmicDefender: FC = () => {
               const nextLives = l - 1;
               if (nextLives <= 0) {
                 setGameStatus('GAME_OVER');
+                audio.playGameOver();
                 const modeKey = `cosmic_defender_${difficulty.toLowerCase()}`;
                 const currentLeaderboard = storage.getLeaderboard(modeKey);
                 const qualifies = score > 0 && (currentLeaderboard.length < 3 || score > (currentLeaderboard[2]?.score || 0));
@@ -281,6 +298,8 @@ export const CosmicDefender: FC = () => {
                   storage.updateHighScore(modeKey, score);
                   setLeaderboard(storage.getLeaderboard(modeKey));
                 }
+              } else {
+                audio.playPlayerHit();
               }
               return nextLives;
             });
@@ -532,6 +551,28 @@ export const CosmicDefender: FC = () => {
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
             Settings
           </h3>
+
+          {/* Audio Settings */}
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                const newMute = audio.toggleMute();
+                setMuted(newMute);
+              }}
+              className="flex items-center justify-center gap-2 w-full py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer bg-black/30 border-slate-800 text-slate-400 hover:border-slate-500 hover:text-white"
+            >
+              {muted ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-red-400" /> Muted
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> Sound Enabled
+                </>
+              )}
+            </button>
+          </div>
 
           <div>
             <div className="flex gap-1.5">

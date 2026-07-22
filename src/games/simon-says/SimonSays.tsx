@@ -9,7 +9,7 @@ import { Play, RotateCcw, Volume2, Zap } from 'lucide-react';
 export const SimonSays: FC = () => {
   const [gameState, setGameState] = useState<'IDLE' | 'SHOWING' | 'INPUT' | 'GAME_OVER'>('IDLE');
   const [sequence, setSequence] = useState<SimonTile['id'][]>([]);
-  const [userInput, setUserInput] = useState<SimonTile['id'][]>([]);
+  const [, setUserInput] = useState<SimonTile['id'][]>([]);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [activeTile, setActiveTile] = useState<SimonTile['id'] | null>(null);
@@ -85,7 +85,6 @@ export const SimonSays: FC = () => {
     if (gameStateRef.current !== 'INPUT') return;
     
     // Flash and sound
-    const tile = SIMON_CONFIG.TILES.find((t) => t.id === tileId)!;
     const flashDuration = SIMON_CONFIG.getFlashDuration(sequenceRef.current.length);
     flashTile(tileId, flashDuration);
     
