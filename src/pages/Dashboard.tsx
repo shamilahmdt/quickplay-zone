@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft, Search, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { gameRegistry } from '../core/gameRegistry';
 import GameCard from '../components/ui/GameCard';
@@ -55,12 +55,23 @@ export const Dashboard: FC = () => {
               placeholder="Search arcade..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full pl-9 pr-3 py-1.5 border rounded-[4px] text-xs font-medium focus:outline-none transition-colors ${
+              className={`w-full pl-9 pr-8 py-1.5 border rounded-[4px] text-xs font-medium focus:outline-none transition-colors ${
                 dark
                   ? 'bg-[#1a1a1c] border-slate-800 text-[#e8e8ea] focus:border-white placeholder-slate-600'
                   : 'bg-white border-slate-200 text-slate-900 focus:border-black placeholder-slate-400'
               }`}
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
+                  dark ? 'text-slate-450 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                }`}
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
