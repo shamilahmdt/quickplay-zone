@@ -19,12 +19,14 @@ export const generateObstacles = (model: BoardModel, _gridSize = 20): Position[]
 
   switch (model) {
     case 'BOX': {
-      // Square inner ring barrier
+      // Square inner ring barrier with center gaps
       for (let i = 5; i <= 14; i++) {
-        rawObstacles.push({ x: i, y: 5 });
-        rawObstacles.push({ x: i, y: 14 });
-        rawObstacles.push({ x: 5, y: i });
-        rawObstacles.push({ x: 14, y: i });
+        if (i !== 9 && i !== 10) {
+          rawObstacles.push({ x: i, y: 5 });
+          rawObstacles.push({ x: i, y: 14 });
+          rawObstacles.push({ x: 5, y: i });
+          rawObstacles.push({ x: 14, y: i });
+        }
       }
       break;
     }

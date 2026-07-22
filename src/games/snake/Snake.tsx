@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { FC } from 'react';
 import { SNAKE_CONFIG } from './snake.config';
 import type { Direction, Position, BoardModel } from './snake.logic';
 import { getNextHead, getRandomPosition, generateObstacles, checkCollision, BOARD_MODELS_INFO } from './snake.logic';
 import { storage } from '../../core/storage';
-import { Award, Play, Pause, RotateCcw, Gamepad2, Settings, Grid } from 'lucide-react';
+import { Award, Play, Pause, RotateCcw, Gamepad2, Settings, Grid, Volume2, VolumeX } from 'lucide-react';
+import { audio } from '../../core/audio';
 
 export const Snake: FC = () => {
   const [snake, setSnake] = useState<Position[]>([
@@ -25,6 +26,19 @@ export const Snake: FC = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [speed, setSpeed] = useState(SNAKE_CONFIG.DIFFICULTY_SPEEDS.MEDIUM);
+  const [muted, setMuted] = useState(audio.getMuted());
+
+  // Manage BGM loop based on game status
+  useEffect(() => {
+    if (gameStatus === 'PLAYING') {
+      audio.startBgm('snake');
+    } else {
+      audio.stopBgm();
+    }
+    return () => {
+      audio.stopBgm();
+    };
+  }, [gameStatus]);
 
   // High Score Prompt State
   const [name, setName] = useState('');
@@ -36,12 +50,7 @@ export const Snake: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const directionRef = useRef<Direction>('UP');
   const inputQueue = useRef<Direction[]>([]);
-  const obstaclesRef = useRef<Position[]>(generateObstacles(boardModel, SNAKE_CONFIG.GRID_SIZE));
-
-  // Update obstacles when board model changes
-  useEffect(() => {
-    obstaclesRef.current = generateObstacles(boardModel, SNAKE_CONFIG.GRID_SIZE);
-  }, [boardModel]);
+  const obstacles = useMemo(() => generateObstacles(boardModel, SNAKE_CONFIG.GRID_SIZE), [boardModel]);
 
   // Load highscore when settings change
   useEffect(() => {
@@ -130,13 +139,13 @@ export const Snake: FC = () => {
         }
 
         const newHead = { x: nextX, y: nextY };
-        const obstacles = obstaclesRef.current;
 
         // Check Collision with walls, obstacles, and self
         const isCollided = checkCollision(newHead, prevSnake.slice(0, -1), obstacles, SNAKE_CONFIG.GRID_SIZE, wallMode);
 
         if (isCollided) {
           setGameStatus('GAME_OVER');
+          audio.playGameOver();
           const modeKey = `snake_${difficulty.toLowerCase()}_${boardModel.toLowerCase()}_${wallMode ? 'solid' : 'wrap'}`;
           const currentLeaderboard = storage.getLeaderboard(modeKey);
           const qualifiesForTop3 = score > 0 && (currentLeaderboard.length < 3 || score > (currentLeaderboard[2]?.score || 0));
@@ -159,6 +168,11 @@ export const Snake: FC = () => {
         // Eat food
         if (newHead.x === food.x && newHead.y === food.y) {
           const isGolden = foodType === 'golden';
+          if (isGolden) {
+            audio.playSnakeGolden();
+          } else {
+            audio.playSnakeEat();
+          }
           const points = isGolden ? 30 : 10;
           setScore((s) => {
             const nextScore = s + points;
@@ -185,7 +199,7 @@ export const Snake: FC = () => {
     }, speed);
 
     return () => clearInterval(interval);
-  }, [gameStatus, food, foodType, speed, score, highScore, wallMode, difficulty, boardModel]);
+  }, [gameStatus, food, foodType, speed, score, highScore, wallMode, difficulty, boardModel, obstacles]);
 
   // Canvas drawing
   useEffect(() => {
@@ -219,7 +233,7 @@ export const Snake: FC = () => {
     }
 
     // Draw Obstacles
-    obstaclesRef.current.forEach((obs) => {
+    obstacles.forEach((obs) => {
       const x = obs.x * cellWidth + 1;
       const y = obs.y * cellHeight + 1;
       const w = cellWidth - 2;
@@ -286,7 +300,7 @@ export const Snake: FC = () => {
         }
       }
     });
-  }, [snake, food, foodType, boardModel]);
+  }, [snake, food, foodType, boardModel, obstacles]);
 
   const resetGame = () => {
     const initialSnake = [
@@ -294,11 +308,10 @@ export const Snake: FC = () => {
       { x: 10, y: 11 },
       { x: 10, y: 12 },
     ];
-    const obstacles = generateObstacles(boardModel, SNAKE_CONFIG.GRID_SIZE);
-    obstaclesRef.current = obstacles;
+    const obstaclesList = generateObstacles(boardModel, SNAKE_CONFIG.GRID_SIZE);
 
     setSnake(initialSnake);
-    setFood(getRandomPosition(SNAKE_CONFIG.GRID_SIZE, [...initialSnake, ...obstacles]));
+    setFood(getRandomPosition(SNAKE_CONFIG.GRID_SIZE, [...initialSnake, ...obstaclesList]));
     setFoodType('normal');
     setDirection('UP');
     directionRef.current = 'UP';
@@ -398,7 +411,11 @@ export const Snake: FC = () => {
         </div>
 
         {/* Board Canvas container */}
-        <div className="relative border border-slate-800 rounded-[4px] overflow-hidden bg-[#09090b] w-full max-w-[480px]">
+        <div className={`relative border rounded-[4px] overflow-hidden bg-[#09090b] w-full max-w-[480px] transition-all duration-300 ${
+          wallMode 
+            ? 'border-slate-500' 
+            : 'border-slate-800'
+        }`}>
           <canvas
             ref={canvasRef}
             width={400}
@@ -543,6 +560,31 @@ export const Snake: FC = () => {
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
             <Settings className="w-4 h-4 text-slate-400" /> Game Options
           </h3>
+
+          {/* Audio Settings */}
+          <div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+              Audio Settings
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const newMute = audio.toggleMute();
+                setMuted(newMute);
+              }}
+              className="flex items-center justify-center gap-2 w-full py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer bg-black/30 border-slate-800 text-slate-400 hover:border-slate-500 hover:text-white"
+            >
+              {muted ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-red-400" /> Muted
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> Sound Enabled
+                </>
+              )}
+            </button>
+          </div>
 
           {/* Difficulty Selector */}
           <div>

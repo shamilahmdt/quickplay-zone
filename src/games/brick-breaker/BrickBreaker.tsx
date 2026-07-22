@@ -4,13 +4,27 @@ import { BRICK_BREAKER_CONFIG } from './brick-breaker.config';
 import type { Difficulty, BlockModel, Brick, Particle } from './brick-breaker.logic';
 import { BLOCK_MODELS_INFO, generateBricks, createParticles } from './brick-breaker.logic';
 import { storage } from '../../core/storage';
-import { Award, Play, Pause, RotateCcw, Target, Settings2, Grid } from 'lucide-react';
+import { Award, Play, Pause, RotateCcw, Target, Settings2, Grid, Volume2, VolumeX } from 'lucide-react';
+import { audio } from '../../core/audio';
 
 export const BrickBreaker: FC = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [gameStatus, setGameStatus] = useState<'IDLE' | 'PLAYING' | 'PAUSED' | 'GAME_OVER'>('IDLE');
+  const [muted, setMuted] = useState(audio.getMuted());
+
+  // Manage BGM loop based on game status
+  useEffect(() => {
+    if (gameStatus === 'PLAYING') {
+      audio.startBgm('brick');
+    } else {
+      audio.stopBgm();
+    }
+    return () => {
+      audio.stopBgm();
+    };
+  }, [gameStatus]);
 
   // Game Settings Options
   const [difficulty, setDifficulty] = useState<Difficulty>('MEDIUM');
@@ -210,14 +224,17 @@ export const BrickBreaker: FC = () => {
         if (state.ballX - BALL_RADIUS <= 0) {
           state.ballX = BALL_RADIUS;
           state.dx = Math.abs(state.dx);
+          audio.playBrickWall();
         } else if (state.ballX + BALL_RADIUS >= canvas.width) {
           state.ballX = canvas.width - BALL_RADIUS;
           state.dx = -Math.abs(state.dx);
+          audio.playBrickWall();
         }
 
         if (state.ballY - BALL_RADIUS <= 0) {
           state.ballY = BALL_RADIUS;
           state.dy = Math.abs(state.dy);
+          audio.playBrickWall();
         }
 
         // 4. Exact Collision with Paddle Top Surface
@@ -245,6 +262,7 @@ export const BrickBreaker: FC = () => {
 
           state.dx = speed * Math.sin(bounceAngle);
           state.dy = -speed * Math.cos(bounceAngle);
+          audio.playBrickPaddle();
         }
 
         // 5. Missed Paddle (Fell below bottom)
@@ -253,6 +271,7 @@ export const BrickBreaker: FC = () => {
             const nextLives = l - 1;
             if (nextLives <= 0) {
               setGameStatus('GAME_OVER');
+              audio.playGameOver();
               const modeKey = `brick_breaker_${difficulty.toLowerCase()}_${blockModel.toLowerCase()}`;
               const currentLeaderboard = storage.getLeaderboard(modeKey);
               const qualifies = score > 0 && (currentLeaderboard.length < 3 || score > (currentLeaderboard[2]?.score || 0));
@@ -268,6 +287,7 @@ export const BrickBreaker: FC = () => {
               }
             } else {
               // Reset ball position cleanly above paddle
+              audio.playPlayerHit();
               const speed = getBallSpeed();
               state.ballX = canvas.width / 2;
               state.ballY = paddleY - BALL_RADIUS - 4;
@@ -304,6 +324,7 @@ export const BrickBreaker: FC = () => {
                 b.status = 0;
                 const newParticles = createParticles(b.x + BRICK_WIDTH / 2, b.y + BRICK_HEIGHT / 2, b.color);
                 state.particles.push(...newParticles);
+                audio.playBrickBreak();
 
                 setScore((s) => {
                   const nextScore = s + 10;
@@ -317,6 +338,7 @@ export const BrickBreaker: FC = () => {
 
         if (activeBricksCount === 0 && state.bricks.length > 0) {
           // Wave cleared! Cycle to the next block model pattern automatically
+          audio.playLevelUp();
           const models: BlockModel[] = ['CLASSIC', 'PYRAMID', 'CHESSBOARD', 'FORTRESS', 'DIAMOND', 'INVADERS'];
           const currentIndex = models.indexOf(blockModelRef.current);
           const nextModel = models[(currentIndex + 1) % models.length];
@@ -593,6 +615,31 @@ export const BrickBreaker: FC = () => {
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
             <Settings2 className="w-4 h-4 text-slate-400" /> Game Options
           </h3>
+
+          {/* Audio Settings */}
+          <div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+              Audio Settings
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const newMute = audio.toggleMute();
+                setMuted(newMute);
+              }}
+              className="flex items-center justify-center gap-2 w-full py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer bg-black/30 border-slate-800 text-slate-400 hover:border-slate-500 hover:text-white"
+            >
+              {muted ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-red-400" /> Muted
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> Sound Enabled
+                </>
+              )}
+            </button>
+          </div>
 
           {/* Difficulty Option (Ball Speed) */}
           <div>
