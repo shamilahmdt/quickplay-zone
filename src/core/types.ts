@@ -18,4 +18,5 @@ export interface GameStats {
   highScore: number;
   playCount: number;
   lastPlayed: string;
+  [key: string]: any;
 }
