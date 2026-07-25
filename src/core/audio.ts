@@ -233,7 +233,7 @@ class AudioManager {
     });
   }
 
-  startBgm(game: 'snake' | 'brick' | 'cosmic') {
+  startBgm(game: 'snake' | 'brick' | 'cosmic' | 'pong') {
     this.init();
     if (this.currentBgm === game) return;
     this.stopBgm();
@@ -243,7 +243,7 @@ class AudioManager {
     this.ctx.resume();
 
     let step = 0;
-    const tempo = game === 'cosmic' ? 130 : game === 'snake' ? 160 : 180; // ms per step
+    const tempo = game === 'cosmic' ? 130 : game === 'snake' ? 160 : game === 'pong' ? 140 : 180; // ms per step
 
     const getSequence = () => {
       switch (game) {
@@ -260,6 +260,13 @@ class AudioManager {
             [440.00, 0.5, 'sine'], [554.37, 0.5, 'sine'], [659.25, 0.5, 'sine'], [554.37, 0.5, 'sine'],
             [349.23, 0.5, 'sine'], [440.00, 0.5, 'sine'], [523.25, 0.5, 'sine'], [440.00, 0.5, 'sine'],
             [293.66, 0.5, 'sine'], [349.23, 0.5, 'sine'], [440.00, 0.5, 'sine'], [349.23, 0.5, 'sine']
+          ];
+        case 'pong':
+          return [
+            [110.00, 0.8, 'sawtooth'], [110.00, 0.8, 'sawtooth'], [220.00, 0.8, 'sawtooth'], [110.00, 0.8, 'sawtooth'],
+            [98.00, 0.8, 'sawtooth'], [98.00, 0.8, 'sawtooth'], [196.00, 0.8, 'sawtooth'], [98.00, 0.8, 'sawtooth'],
+            [87.31, 0.8, 'sawtooth'], [87.31, 0.8, 'sawtooth'], [174.61, 0.8, 'sawtooth'], [87.31, 0.8, 'sawtooth'],
+            [82.41, 0.8, 'sawtooth'], [82.41, 0.8, 'sawtooth'], [164.81, 0.8, 'sawtooth'], [82.41, 0.8, 'sawtooth']
           ];
         case 'cosmic':
         default:
@@ -291,7 +298,7 @@ class AudioManager {
         osc.type = type;
         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
         
-        const bgmVolume = game === 'cosmic' ? 0.012 : 0.032;
+        const bgmVolume = game === 'cosmic' ? 0.012 : game === 'pong' ? 0.015 : 0.032;
         gain.gain.setValueAtTime(bgmVolume, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + (tempo / 1000) * durationMult);
 
@@ -322,7 +329,7 @@ class AudioManager {
     if (this.isMuted) {
       this.stopBgm();
     } else if (this.currentBgm) {
-      const bgm = this.currentBgm as 'snake' | 'brick' | 'cosmic';
+      const bgm = this.currentBgm as 'snake' | 'brick' | 'cosmic' | 'pong';
       this.currentBgm = null;
       this.startBgm(bgm);
     }
