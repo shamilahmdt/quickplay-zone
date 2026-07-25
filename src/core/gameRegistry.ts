@@ -3,6 +3,7 @@ import Snake from '../games/snake/Snake';
 import CosmicDefender from '../games/cosmic-defender/CosmicDefender';
 import BrickBreaker from '../games/brick-breaker/BrickBreaker';
 import SimonSays from '../games/simon-says/SimonSays';
+import NeonPong from '../games/neon-pong/NeonPong';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -41,6 +42,15 @@ export const gameRegistry: GameMeta[] = [
     controls: ['Tap tiles: Repeat sequence', 'Sound toggle: Top left'],
     component: SimonSays,
   },
+  {
+    id: "neon_pong",
+    name: "Neon Pong",
+    description: "Classic retro tennis. Play against the AI or challenge a friend locally!",
+    thumbnail: "🏓", 
+    category: "Sports",
+    controls: ["W/S: Move Left Paddle", "Up/Down: Move Right Paddle", "Space: Pause"],
+    component: NeonPong,
+  }
 ];
 
 export const getGameById = (id: string): GameMeta | undefined => {
