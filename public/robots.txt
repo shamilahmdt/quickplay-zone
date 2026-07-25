@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Host & Sitemap Location
+Sitemap: https://quickplay-zone.vercel.app/sitemap.xml

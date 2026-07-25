@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { PONG_CONFIG, type Difficulty, type GameMode } from './neon-pong.config';
 import { initGameState, type GameState, resetBall } from './neon-pong.logic';
 import { storage } from '../../core/storage';
-import { Play, RotateCcw, Gamepad2, Settings, Trophy, Monitor, Users } from 'lucide-react';
+import { Play, RotateCcw, Gamepad2, Settings, Trophy, Monitor, Users, Volume2, VolumeX, Pause } from 'lucide-react';
 import { audio } from '../../core/audio';
 
 export const NeonPong: FC = () => {
@@ -15,8 +15,21 @@ export const NeonPong: FC = () => {
   const [mode, setMode] = useState<GameMode>('vs_ai');
   const [difficulty, setDifficulty] = useState<Difficulty>('MEDIUM');
   const [stats, setStats] = useState({ winsAI: 0, longestRally: 0 });
+  const [muted, setMuted] = useState(audio.getMuted());
 
   const keys = useRef<{ [key: string]: boolean }>({});
+
+  // Manage BGM loop based on game status
+  useEffect(() => {
+    if (gameState.status === 'PLAYING') {
+      audio.startBgm('pong');
+    } else {
+      audio.stopBgm();
+    }
+    return () => {
+      audio.stopBgm();
+    };
+  }, [gameState.status]);
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -197,15 +210,17 @@ export const NeonPong: FC = () => {
       }
 
       if (scored) {
-        if (!audio.getMuted()) audio.playGameOver(); // Point sound
         if (player1.score >= PONG_CONFIG.WIN_SCORE || player2.score >= PONG_CONFIG.WIN_SCORE) {
           state.status = 'GAMEOVER';
+          if (!audio.getMuted()) audio.playGameOver(); // Match ended sound
           // Save stats
           if (state.mode === 'vs_ai') {
             saveStats(player1.score >= PONG_CONFIG.WIN_SCORE, state.longestRally);
           } else {
              saveStats(false, state.longestRally);
           }
+        } else {
+          if (!audio.getMuted()) audio.playLevelUp(); // Point scored sound
         }
       }
 
@@ -416,6 +431,40 @@ export const NeonPong: FC = () => {
             </div>
           )}
         </div>
+
+        {/* Play/Pause & Restart Button Bar */}
+        <div className="mt-4 flex gap-3 w-full max-w-[600px]">
+          <button
+            type="button"
+            onClick={() => {
+              if (gameState.status === 'PLAYING') {
+                setGameState(prev => ({ ...prev, status: 'PAUSED' }));
+              } else if (gameState.status === 'PAUSED') {
+                setGameState(prev => ({ ...prev, status: 'PLAYING' }));
+              }
+            }}
+            disabled={gameState.status === 'IDLE' || gameState.status === 'GAMEOVER'}
+            className="flex-1 flex items-center justify-center gap-2 bg-[#1a1a1c] border border-slate-800 hover:border-slate-500 hover:text-white text-slate-300 py-2.5 rounded-[4px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs uppercase tracking-wider cursor-pointer"
+          >
+            {gameState.status === 'PLAYING' ? (
+              <>
+                <Pause className="w-4 h-4 text-purple-400" /> Pause
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4 text-emerald-400 fill-current" /> Play
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={resetGame}
+            className="flex-1 flex items-center justify-center gap-2 bg-[#1a1a1c] border border-slate-800 hover:border-slate-500 hover:text-white text-slate-300 py-2.5 rounded-[4px] font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
+          >
+            <RotateCcw className="w-4 h-4 text-cyan-400" /> Restart
+          </button>
+        </div>
       </div>
 
       {/* Settings & Stats Column */}
@@ -484,6 +533,31 @@ export const NeonPong: FC = () => {
               </div>
             </div>
           )}
+
+          {/* Audio Controls */}
+          <div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+              Audio Settings
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const newMute = audio.toggleMute();
+                setMuted(newMute);
+              }}
+              className="flex items-center justify-center gap-2 w-full py-2 rounded-[4px] border text-[10px] font-bold transition-all cursor-pointer bg-black/30 border-slate-800 text-slate-400 hover:border-slate-500 hover:text-white"
+            >
+              {muted ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-red-400" /> Muted
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> Sound Enabled
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Stats Panel */}

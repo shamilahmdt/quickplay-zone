@@ -1,0 +1,18 @@
+/* TEAM */
+Developer: Shamil Ahammed T
+Site: https://shamil-ahammed-t.vercel.app
+GitHub: https://github.com/shamilahmdt
+Location: India
+
+/* SITE */
+Project: QuickPlay Zone
+Description: A modern, offline-first web game hub with retro-styled classic arcade and memory games.
+Deployment: https://quickplay-zone.vercel.app/
+Standards: HTML5, CSS3, TypeScript, React, Vite
+Components: Lucide React, React Router
+Software: VS Code, Git
+
+/* THANKS */
+React — https://react.dev
+Vite — https://vite.dev
+Vercel — https://vercel.com
