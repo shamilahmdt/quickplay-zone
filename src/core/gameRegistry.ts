@@ -4,6 +4,7 @@ import CosmicDefender from '../games/cosmic-defender/CosmicDefender';
 import BrickBreaker from '../games/brick-breaker/BrickBreaker';
 import SimonSays from '../games/simon-says/SimonSays';
 import NeonPong from '../games/neon-pong/NeonPong';
+import TwentyFortyEight from '../games/twentyfortyeight/TwentyFortyEight';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -50,6 +51,15 @@ export const gameRegistry: GameMeta[] = [
     category: "Sports",
     controls: ["W/S: Move Left Paddle", "Up/Down: Move Right Paddle", "Space: Pause"],
     component: NeonPong,
+  },
+  {
+    id: 'twentyfortyeight',
+    name: '2048 Puzzle',
+    description: 'Slide tiles and merge matching numbers to reach the legendary 2048 tile.',
+    thumbnail: '🔢',
+    category: 'Puzzle',
+    controls: ['W/A/S/D / Arrows: Slide tiles', 'R: Restart game', 'Mobile: Swipe grid to slide tiles'],
+    component: TwentyFortyEight,
   }
 ];
 
