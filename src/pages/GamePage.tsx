@@ -11,9 +11,9 @@ export const GamePage: FC = () => {
   const { dark } = useTheme();
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [toastCount, setToastCount] = useState(0);
   const [showToast, setShowToast] = useState(false);
   const scrollAttemptsRef = useRef(0);
+  const toastCountRef = useRef(0);
   const lastToastTimeRef = useRef(0);
 
   // Monitor game status events
@@ -32,6 +32,7 @@ export const GamePage: FC = () => {
   useEffect(() => {
     if (!isPlaying) {
       scrollAttemptsRef.current = 0;
+      toastCountRef.current = 0;
       return;
     }
 
@@ -43,13 +44,10 @@ export const GamePage: FC = () => {
         lastToastTimeRef.current = now;
 
         if (scrollAttemptsRef.current > 3) {
-          setToastCount((prev) => {
-            if (prev < 3) {
-              setShowToast(true);
-              return prev + 1;
-            }
-            return prev;
-          });
+          if (toastCountRef.current < 3) {
+            setShowToast(true);
+            toastCountRef.current += 1;
+          }
         }
       }
     };
