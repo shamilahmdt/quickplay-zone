@@ -4,19 +4,55 @@ import { SIMON_CONFIG } from './simon-says.config';
 import type { SimonTile } from './simon-says.logic';
 import { getRandomTile, playTileSound, checkInput, isRoundComplete } from './simon-says.logic';
 import { storage } from '../../core/storage';
-import { Play, RotateCcw, Volume2, Zap } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2, Zap } from 'lucide-react';
 
 export const SimonSays: FC = () => {
-  const [gameState, setGameState] = useState<'IDLE' | 'SHOWING' | 'INPUT' | 'GAME_OVER'>('IDLE');
+  const [gameState, setGameState] = useState<'IDLE' | 'SHOWING' | 'INPUT' | 'PAUSED' | 'GAME_OVER'>('IDLE');
+  const gameStateBeforePause = useRef<'SHOWING' | 'INPUT'>('SHOWING');
+  const pausedRef = useRef<boolean>(false);
   const [sequence, setSequence] = useState<SimonTile['id'][]>([]);
   const [, setUserInput] = useState<SimonTile['id'][]>([]);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [activeTile, setActiveTile] = useState<SimonTile['id'] | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const gameStateRef = useRef<'IDLE' | 'SHOWING' | 'INPUT' | 'GAME_OVER'>('IDLE');
+  const gameStateRef = useRef<'IDLE' | 'SHOWING' | 'INPUT' | 'PAUSED' | 'GAME_OVER'>('IDLE');
   const sequenceRef = useRef<SimonTile['id'][]>([]);
   const userInputRef = useRef<SimonTile['id'][]>([]);
+
+  const pauseGame = () => {
+    if (gameStateRef.current === 'SHOWING' || gameStateRef.current === 'INPUT') {
+      gameStateBeforePause.current = gameStateRef.current;
+      pausedRef.current = true;
+      setGameState('PAUSED');
+      gameStateRef.current = 'PAUSED';
+    }
+  };
+
+  const resumeGame = () => {
+    if (gameStateRef.current === 'PAUSED') {
+      pausedRef.current = false;
+      const nextState = gameStateBeforePause.current;
+      setGameState(nextState);
+      gameStateRef.current = nextState;
+    }
+  };
+
+  // Keyboard controls for pausing
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (gameStateRef.current === 'SHOWING' || gameStateRef.current === 'INPUT') {
+          pauseGame();
+        } else if (gameStateRef.current === 'PAUSED') {
+          resumeGame();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Load high score on mount
   useEffect(() => {
@@ -24,6 +60,15 @@ export const SimonSays: FC = () => {
     setHighScore(stats.highScore);
     storage.incrementPlayCount('simon_says');
   }, []);
+
+  // Broadcast playing status
+  useEffect(() => {
+    const isPlaying = gameState === 'SHOWING' || gameState === 'INPUT';
+    window.dispatchEvent(new CustomEvent('qplay-status', { detail: { isPlaying } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('qplay-status', { detail: { isPlaying: false } }));
+    };
+  }, [gameState]);
 
   // Flash a tile
   const flashTile = (tileId: SimonTile['id'], duration: number) => {
@@ -45,6 +90,9 @@ export const SimonSays: FC = () => {
     gameStateRef.current = 'SHOWING';
     
     for (let i = 0; i < seq.length; i++) {
+      while (pausedRef.current) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
       await new Promise((resolve) => {
         setTimeout(() => {
           const flashDuration = SIMON_CONFIG.getFlashDuration(seq.length);
@@ -185,6 +233,19 @@ export const SimonSays: FC = () => {
         </div>
 
         {/* Overlay States */}
+        {gameState === 'PAUSED' && (
+          <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center gap-4 z-20">
+            <Pause className="w-12 h-12 text-yellow-400 animate-pulse" />
+            <h3 className="text-lg font-bold uppercase tracking-wider text-white">Paused</h3>
+            <button
+              onClick={resumeGame}
+              className="flex items-center gap-2 bg-white text-black font-bold px-6 py-2.5 rounded-lg border border-white hover:bg-transparent hover:text-white transition-colors uppercase text-sm"
+            >
+              <Play className="w-4 h-4 fill-current" /> Resume Game
+            </button>
+          </div>
+        )}
+
         {gameState === 'IDLE' && (
           <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-4 z-20">
             <Zap className="w-12 h-12 text-yellow-400" />
@@ -247,6 +308,28 @@ export const SimonSays: FC = () => {
         >
           <Volume2 className="w-5 h-5" />
         </button>
+        {(gameState === 'SHOWING' || gameState === 'INPUT' || gameState === 'PAUSED') && (
+          <button
+            onClick={() => {
+              if (gameState === 'PAUSED') {
+                resumeGame();
+              } else {
+                pauseGame();
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-700 text-slate-350 hover:text-white hover:border-slate-500 rounded-lg text-xs font-bold transition-all cursor-pointer"
+          >
+            {gameState === 'PAUSED' ? (
+              <>
+                <Play className="w-4 h-4 fill-current" /> Resume
+              </>
+            ) : (
+              <>
+                <Pause className="w-4 h-4" /> Pause
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Game Status Info */}

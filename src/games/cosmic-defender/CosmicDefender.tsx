@@ -25,6 +25,15 @@ export const CosmicDefender: FC = () => {
       audio.stopBgm();
     };
   }, [gameStatus]);
+
+  // Broadcast playing status
+  useEffect(() => {
+    const isPlaying = gameStatus === 'PLAYING';
+    window.dispatchEvent(new CustomEvent('qplay-status', { detail: { isPlaying } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('qplay-status', { detail: { isPlaying: false } }));
+    };
+  }, [gameStatus]);
   
   // Difficulty configurations
   const [difficulty, setDifficulty] = useState<Difficulty>('MEDIUM');

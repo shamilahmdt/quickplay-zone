@@ -40,6 +40,15 @@ export const Snake: FC = () => {
     };
   }, [gameStatus]);
 
+  // Broadcast playing status
+  useEffect(() => {
+    const isPlaying = gameStatus === 'PLAYING';
+    window.dispatchEvent(new CustomEvent('qplay-status', { detail: { isPlaying } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('qplay-status', { detail: { isPlaying: false } }));
+    };
+  }, [gameStatus]);
+
   // High Score Prompt State
   const [name, setName] = useState('');
   const [showNamePrompt, setShowNamePrompt] = useState(false);

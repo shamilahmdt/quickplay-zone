@@ -5,6 +5,7 @@ import BrickBreaker from '../games/brick-breaker/BrickBreaker';
 import SimonSays from '../games/simon-says/SimonSays';
 import NeonPong from '../games/neon-pong/NeonPong';
 import TwentyFortyEight from '../games/twentyfortyeight/TwentyFortyEight';
+import Bounce from '../games/bounce/Bounce';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -60,6 +61,15 @@ export const gameRegistry: GameMeta[] = [
     category: 'Puzzle',
     controls: ['W/A/S/D / Arrows: Slide tiles', 'R: Restart game', 'Mobile: Swipe grid to slide tiles'],
     component: TwentyFortyEight,
+  },
+  {
+    id: 'bounce',
+    name: 'Bounce Retro',
+    description: 'Roll and bounce a red ball through obstacles, collect golden rings, and reach the exit portal. Nostalgic arcade platformer physics.',
+    thumbnail: '🔴',
+    category: 'Arcade',
+    controls: ['A/D / Left/Right Arrows: Roll left & right', 'W / Up Arrow: Jump/Bounce', 'Spacebar: Pause game'],
+    component: Bounce,
   }
 ];
 
