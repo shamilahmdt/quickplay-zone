@@ -1,13 +1,93 @@
+import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getGameById } from '../core/gameRegistry';
 import { useTheme } from '../context/ThemeContext';
-import { ArrowLeft, Info, Gamepad2 } from 'lucide-react';
+import { ArrowLeft, Info, Gamepad2, AlertTriangle } from 'lucide-react';
 
 export const GamePage: FC = () => {
   const { gameId } = useParams<{ gameId: string }>();
   const game = gameId ? getGameById(gameId) : undefined;
   const { dark } = useTheme();
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const scrollAttemptsRef = useRef(0);
+  const toastCountRef = useRef(0);
+  const lastToastTimeRef = useRef(0);
+
+  // Monitor game status events
+  useEffect(() => {
+    const handleStatus = (e: Event) => {
+      const customEvent = e as CustomEvent<{ isPlaying: boolean }>;
+      setIsPlaying(customEvent.detail.isPlaying);
+    };
+    window.addEventListener('qplay-status', handleStatus);
+    return () => {
+      window.removeEventListener('qplay-status', handleStatus);
+    };
+  }, []);
+
+  // Block scroll events during active gameplay
+  useEffect(() => {
+    if (!isPlaying) {
+      scrollAttemptsRef.current = 0;
+      toastCountRef.current = 0;
+      return;
+    }
+
+    const handleScrollAttempt = () => {
+      const now = Date.now();
+      // Throttle warning logic checks
+      if (now - lastToastTimeRef.current > 1000) {
+        scrollAttemptsRef.current += 1;
+        lastToastTimeRef.current = now;
+
+        if (scrollAttemptsRef.current > 3) {
+          if (toastCountRef.current < 3) {
+            setShowToast(true);
+            toastCountRef.current += 1;
+          }
+        }
+      }
+    };
+
+    const preventScroll = (e: Event) => {
+      e.preventDefault();
+      handleScrollAttempt();
+    };
+
+    const preventKeyScroll = (e: KeyboardEvent) => {
+      const scrollKeys = ['Space', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'End', 'Home'];
+      const activeEl = document.activeElement;
+      const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+      if (scrollKeys.includes(e.code) && !isInput) {
+        e.preventDefault();
+        handleScrollAttempt();
+      }
+    };
+
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+    window.addEventListener('keydown', preventKeyScroll, { passive: false });
+
+    return () => {
+      window.removeEventListener('wheel', preventScroll);
+      window.removeEventListener('touchmove', preventScroll);
+      window.removeEventListener('keydown', preventKeyScroll);
+    };
+  }, [isPlaying]);
+
+  // Auto-hide warning toast
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   if (!game) {
     return (
@@ -28,8 +108,27 @@ export const GamePage: FC = () => {
   const GameComponent = game.component;
 
   return (
-    <div className={`flex-1 flex flex-col gap-6 p-6 md:p-8 transition-colors duration-300 ${dark ? 'bg-[#121214] text-[#e8e8ea]' : 'bg-[#f8fafc] text-slate-900'
+    <div className={`flex-1 flex flex-col gap-6 p-6 md:p-8 transition-colors duration-300 relative ${dark ? 'bg-[#121214] text-[#e8e8ea]' : 'bg-[#f8fafc] text-slate-900'
       }`}>
+      {/* Toast warning for scroll attempt */}
+      {showToast && (
+        <div className="fixed top-4 right-4 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-[4px] shadow-xl border text-xs font-semibold select-none ${
+            dark 
+              ? 'bg-[#1a1a1c]/95 border-amber-500/40 text-amber-400 backdrop-blur-md' 
+              : 'bg-white/95 border-amber-400/50 text-amber-700 backdrop-blur-md shadow-amber-950/5'
+          }`}>
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+            <span>Gameplay active! Pause the game to scroll.</span>
+            <button 
+              onClick={() => setShowToast(false)} 
+              className="ml-1.5 hover:opacity-70 text-slate-400 font-bold text-sm cursor-pointer"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       {/* Game Header Area */}
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 ${dark ? 'border-slate-800' : 'border-slate-200'
         }`}>

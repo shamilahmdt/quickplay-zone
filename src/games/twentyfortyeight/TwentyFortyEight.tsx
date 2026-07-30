@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { storage } from '../../core/storage';
-import { Award, Play, RotateCcw, Target, Sparkles, Volume2, VolumeX, Trophy, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Award, Play, Pause, RotateCcw, Target, Sparkles, Volume2, VolumeX, Trophy, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { audio } from '../../core/audio';
 import type { ScoreEntry } from '../../core/types';
 import { TWENTYFORTYEIGHT_CONFIG } from './twentyfortyeight.config';
@@ -14,7 +14,7 @@ export const TwentyFortyEight: FC = () => {
   const [board2048, setBoard2048] = useState<Tile[]>([]);
   const [score2048, setScore2048] = useState(0);
   const [highScore2048, setHighScore2048] = useState(0);
-  const [status2048, setStatus2048] = useState<'idle' | 'playing' | 'won' | 'gameover'>('idle');
+  const [status2048, setStatus2048] = useState<'idle' | 'playing' | 'paused' | 'won' | 'gameover'>('idle');
   const [keepPlaying, setKeepPlaying] = useState(false);
   const [muted, setMuted] = useState(audio.getMuted());
 
@@ -33,6 +33,15 @@ export const TwentyFortyEight: FC = () => {
     setLeaderboard(storage.getLeaderboard('twentyfortyeight'));
     storage.incrementPlayCount('twentyfortyeight');
   }, []);
+
+  // Broadcast playing status
+  useEffect(() => {
+    const isPlaying = status2048 === 'playing';
+    window.dispatchEvent(new CustomEvent('qplay-status', { detail: { isPlaying } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('qplay-status', { detail: { isPlaying: false } }));
+    };
+  }, [status2048]);
 
   // --- Helper Functions ---
   const init2048 = () => {
@@ -145,9 +154,18 @@ export const TwentyFortyEight: FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (showNamePrompt) return;
 
-      const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyR'];
+      const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyR', 'Space'];
       if (keys.includes(e.code)) {
         e.preventDefault();
+      }
+
+      if (e.code === 'Space') {
+        if (status2048 === 'playing') {
+          setStatus2048('paused');
+        } else if (status2048 === 'paused') {
+          setStatus2048('playing');
+        }
+        return;
       }
 
       if (status2048 === 'playing' || status2048 === 'won') {
@@ -284,6 +302,23 @@ export const TwentyFortyEight: FC = () => {
           </div>
 
           {/* --- Overlays --- */}
+          {status2048 === 'paused' && (
+            <div className="absolute inset-0 bg-white/95 dark:bg-[#121214]/95 flex flex-col items-center justify-center p-6 text-center z-20">
+              <Pause className="w-12 h-12 text-zinc-800 dark:text-[#e8e8ea] mb-3 animate-pulse" />
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2 uppercase tracking-wider">Game Paused</h3>
+              <p className="text-xs text-zinc-500 dark:text-slate-400 mb-6 max-w-[280px]">
+                The game is currently paused. Press Space or click Resume to continue.
+              </p>
+
+              <button
+                onClick={() => setStatus2048('playing')}
+                className="flex items-center justify-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold px-6 py-2.5 rounded-[4px] border border-zinc-900 dark:border-white hover:bg-transparent hover:text-zinc-900 dark:hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer w-full max-w-xs pointer-events-auto"
+              >
+                <Play className="w-3.5 h-3.5 fill-current animate-pulse" /> Resume Game
+              </button>
+            </div>
+          )}
+
           {status2048 === 'idle' && (
             <div className="absolute inset-0 bg-white/95 dark:bg-[#121214]/95 flex flex-col items-center justify-center p-6 text-center z-20">
               <Target className="w-12 h-12 text-zinc-800 dark:text-[#e8e8ea] mb-3 animate-pulse" />
@@ -378,12 +413,30 @@ export const TwentyFortyEight: FC = () => {
 
         {/* Onscreen D-Pad for mobile view */}
         <div className="mt-6 flex gap-4 items-center justify-between w-full max-w-[400px] px-2">
-          <button
-            onClick={init2048}
-            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-650 dark:text-slate-355 font-bold text-xs rounded-[4px] border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer"
-          >
-            Reset Board
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={init2048}
+              className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-650 dark:text-slate-355 font-bold text-xs rounded-[4px] border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer"
+            >
+              Reset Board
+            </button>
+            {(status2048 === 'playing' || status2048 === 'paused') && (
+              <button
+                onClick={() => setStatus2048(prev => prev === 'playing' ? 'paused' : 'playing')}
+                className="flex items-center gap-1.5 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-650 dark:text-slate-355 font-bold text-xs rounded-[4px] border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer"
+              >
+                {status2048 === 'playing' ? (
+                  <>
+                    <Pause className="w-3.5 h-3.5" /> Pause
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-3.5 h-3.5" /> Resume
+                  </>
+                )}
+              </button>
+            )}
+          </div>
 
           <div className="grid grid-cols-3 gap-1.5 w-28 h-28 shrink-0">
             <div />

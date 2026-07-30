@@ -31,6 +31,15 @@ export const NeonPong: FC = () => {
     };
   }, [gameState.status]);
 
+  // Broadcast playing status
+  useEffect(() => {
+    const isPlaying = gameState.status === 'PLAYING';
+    window.dispatchEvent(new CustomEvent('qplay-status', { detail: { isPlaying } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('qplay-status', { detail: { isPlaying: false } }));
+    };
+  }, [gameState.status]);
+
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
