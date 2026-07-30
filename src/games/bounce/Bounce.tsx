@@ -175,9 +175,8 @@ export const Bounce: FC = () => {
         audio.playGameOver();
         setShowNamePrompt(score > 0);
       } else {
-        // Reset ball position to last checkpoint
         ball.current.x = respawnPos.current.x;
-        ball.current.y = respawnPos.current.y;
+        ball.current.y = respawnPos.current.y - ball.current.radius - 40;
         ball.current.vx = 0;
         ball.current.vy = 0;
         ball.current.scaleX = 1;

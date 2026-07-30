@@ -118,7 +118,7 @@ export const LEVELS: Level[] = [
     slopes: [],
     checkpoints: [
       { x: 350, y: 350, active: false }, // sits on Ground 1
-      { x: 950, y: 350, active: false }, // sits on Ground 2
+      { x: 800, y: 350, active: false }, // moved from 950 (spike pit) to Ground 2
       { x: 1750, y: 350, active: false }, // moved from 1650 (spike pit) to Ground 4
       { x: 2150, y: 350, active: false }, // sits on Ground 4
     ],
@@ -214,7 +214,7 @@ export const LEVELS: Level[] = [
     checkpoints: [
       { x: 450, y: 350, active: false }, // Ground 1
       { x: 1150, y: 350, active: false }, // Ground 2
-      { x: 1950, y: 350, active: false }, // moved from 1850 (spike pit) to Ground 4 y:350
+      { x: 2150, y: 350, active: false }, // moved from 1950 (spike pit) to Ground 4 y:350
     ],
     spikes: [
       { x: 500, y: 350, width: 150, height: 50 },
