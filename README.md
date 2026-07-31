@@ -26,19 +26,17 @@ Experience QuickPlay Zone live at: **[https://quickplay-zone.vercel.app/](https:
 
 ---
 
-## 🐍 Snake Classic Game Options
+## 🎮 Available Games
 
-The integrated Snake Classic game features customized options configurable from the side panel:
-1. **Difficulty Speeds**:
-   - `EASY` (180ms tick rate)
-   - `MEDIUM` (130ms tick rate)
-   - `HARD` (80ms tick rate)
-2. **Wall Collision Modes**:
-   - `Solid Walls` (death on board border contact)
-   - `Screen Wrap` (snake wraps around to the opposite side of the grid board)
-3. **Leaderboard**:
-   - Displays the top 3 scores saved under local storage.
-   - Prompts the user with an input overlay to save their name **only** if they qualify for the top 3 high scores. Otherwise, scores are committed automatically under `Anonymous Player`.
+QuickPlay Zone features a selection of retro games built to run instantly offline:
+
+* **Snake Classic** 🐍 — Eat silver bits, adjust speed/difficulty, select wall wrapping modes, and save high scores.
+* **Cosmic Defender** 🚀 — Move your spaceship, dodge enemy projectiles, and shoot down waves of hostile aliens.
+* **Brick Breaker** 🧱 — Bounce balls and break neon bricks with fluid movement and paddle physics.
+* **Simon Says** 🎵 — Watch sound and light patterns and repeat the sequence to test your memory.
+* **Neon Pong** 🏓 — Classic paddle tennis with support for local two-player matchups or single-player vs AI.
+* **2048 Puzzle** 🔢 — Slide and merge matching number tiles to reach the 2048 goal.
+* **Bounce Retro** 🔴 — Roll, jump, and bounce a squishy red ball through 10 obstacle-filled platformer levels.
 
 ---
 
@@ -47,13 +45,13 @@ The integrated Snake Classic game features customized options configurable from 
 Adding a new game to the QuickPlay Zone grid takes four simple steps:
 
 1. **Reference/Duplicate the Template**:
-   Inspect [GameTemplate.tsx](file:///d:/PROJECTS/Personal/MyProjects/QuickPlayZone/src/games/_template/GameTemplate.tsx) under `src/games/_template/` to see the basic structure, hooks, storage integration, and layout style properties.
+   Inspect [GameTemplate.tsx](./src/games/_template/GameTemplate.tsx) under `src/games/_template/` to see the basic structure, hooks, storage integration, and layout style properties.
 
 2. **Develop the Game**:
    Create a folder under `src/games/<your-game-name>/` and build your React + Canvas gameplay elements. Use the `storage` utility to retrieve and update scores.
 
 3. **Register in Registry**:
-   Import your component and add a configuration item to the `gameRegistry` array in [gameRegistry.ts](file:///d:/PROJECTS/Personal/MyProjects/QuickPlayZone/src/core/gameRegistry.ts):
+   Import your component and add a configuration item to the `gameRegistry` array in [gameRegistry.ts](./src/core/gameRegistry.ts):
    ```typescript
    import YourGame from '../games/your-game-name/YourGame';
 
