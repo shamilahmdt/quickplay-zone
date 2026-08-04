@@ -6,6 +6,7 @@ import SimonSays from '../games/simon-says/SimonSays';
 import NeonPong from '../games/neon-pong/NeonPong';
 import TwentyFortyEight from '../games/twentyfortyeight/TwentyFortyEight';
 import Bounce from '../games/bounce/Bounce';
+import FlappyPacket from '../games/flappy-packet/FlappyPacket';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -70,6 +71,15 @@ export const gameRegistry: GameMeta[] = [
     category: 'Arcade',
     controls: ['A/D / Left/Right Arrows: Roll left & right', 'W / Up Arrow: Jump/Bounce', 'Spacebar: Pause game'],
     component: Bounce,
+  },
+  {
+    id: 'flappy_packet',
+    name: 'Flappy Packet',
+    description: 'Fly your data packet safely through vertical firewall gaps without crashing.',
+    thumbnail: '🐤',
+    category: 'Arcade',
+    controls: ['Spacebar / Tap Screen: Jump / Flap upward'],
+    component: FlappyPacket,
   }
 ];
 
