@@ -7,6 +7,19 @@ import { Play, RotateCcw, Gamepad2, Settings, Trophy, Monitor, Users, Volume2, V
 import { audio } from '../../core/audio';
 
 export const NeonPong: FC = () => {
+  // --- Touch Layout Detection ---
+  const [useTouchLayout, setUseTouchLayout] = useState(false);
+  useEffect(() => {
+    const checkTouch = () => {
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isMobileViewport = window.innerWidth < 768;
+      setUseTouchLayout(hasTouch || isMobileViewport);
+    };
+    checkTouch();
+    window.addEventListener('resize', checkTouch);
+    return () => window.removeEventListener('resize', checkTouch);
+  }, []);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [gameState, setGameState] = useState<GameState>(initGameState('vs_ai', 'MEDIUM'));
   const gameStateRef = useRef<GameState>(gameState);
@@ -333,25 +346,25 @@ export const NeonPong: FC = () => {
       {/* Game board column */}
       <div className="flex-1 flex flex-col items-center">
         {/* Score Board */}
-        <div className="flex justify-between items-center w-full max-w-[600px] mb-4 bg-[#1a1a1c] border border-slate-800 p-4 rounded-[4px]">
+        <div className="flex justify-between items-center w-full max-w-[600px] mb-4 bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 p-4 rounded-[4px]">
           <div className="w-1/3 text-left">
-            <div className="text-xs text-purple-400 font-bold mb-0.5 uppercase tracking-widest">Player 1</div>
-            <div className="text-3xl font-black text-white font-mono">{gameState.player1.score}</div>
+            <div className="text-xs text-purple-600 dark:text-purple-400 font-bold mb-0.5 uppercase tracking-widest">Player 1</div>
+            <div className="text-3xl font-black text-zinc-900 dark:text-white font-mono">{gameState.player1.score}</div>
           </div>
           <div className="w-1/3 text-center">
-            <div className="text-[10px] text-slate-500 font-semibold mb-0.5 uppercase">Rally</div>
-            <div className="text-xl font-bold text-slate-300 font-mono">{gameState.rallyCount}</div>
+            <div className="text-[10px] text-zinc-500 dark:text-slate-500 font-semibold mb-0.5 uppercase">Rally</div>
+            <div className="text-xl font-bold text-zinc-850 dark:text-slate-300 font-mono">{gameState.rallyCount}</div>
           </div>
           <div className="w-1/3 text-right">
-            <div className={`text-xs font-bold mb-0.5 uppercase tracking-widest ${gameState.mode === 'vs_ai' ? 'text-cyan-400' : 'text-purple-400'}`}>
+            <div className={`text-xs font-bold mb-0.5 uppercase tracking-widest ${gameState.mode === 'vs_ai' ? 'text-cyan-600 dark:text-cyan-400' : 'text-purple-600 dark:text-purple-400'}`}>
               {gameState.mode === 'vs_ai' ? 'AI System' : 'Player 2'}
             </div>
-            <div className="text-3xl font-black text-white font-mono">{gameState.player2.score}</div>
+            <div className="text-3xl font-black text-zinc-900 dark:text-white font-mono">{gameState.player2.score}</div>
           </div>
         </div>
 
         {/* Board Canvas container */}
-        <div className="relative border border-slate-800 rounded-[4px] overflow-hidden bg-[#070710] w-full max-w-[600px] aspect-[16/10] shadow-[0_0_30px_rgba(168,85,247,0.1)]">
+        <div className="relative border border-zinc-200 dark:border-slate-800 rounded-[4px] overflow-hidden bg-[#070710] w-full max-w-[600px] aspect-[16/10] shadow-[0_0_30px_rgba(168,85,247,0.1)]">
           <canvas
             ref={canvasRef}
             width={PONG_CONFIG.CANVAS_WIDTH}
@@ -453,15 +466,15 @@ export const NeonPong: FC = () => {
               }
             }}
             disabled={gameState.status === 'IDLE' || gameState.status === 'GAMEOVER'}
-            className="flex-1 flex items-center justify-center gap-2 bg-[#1a1a1c] border border-slate-800 hover:border-slate-500 hover:text-white text-slate-300 py-2.5 rounded-[4px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs uppercase tracking-wider cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-2 bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 hover:border-zinc-400 dark:hover:border-slate-500 hover:text-zinc-950 dark:hover:text-white text-zinc-700 dark:text-slate-300 py-2.5 rounded-[4px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs uppercase tracking-wider cursor-pointer"
           >
             {gameState.status === 'PLAYING' ? (
               <>
-                <Pause className="w-4 h-4 text-purple-400" /> Pause
+                <Pause className="w-4 h-4 text-purple-500 dark:text-purple-400" /> Pause
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 text-emerald-400 fill-current" /> Play
+                <Play className="w-4 h-4 text-emerald-500 dark:text-emerald-400 fill-current" /> Play
               </>
             )}
           </button>
@@ -469,9 +482,9 @@ export const NeonPong: FC = () => {
           <button
             type="button"
             onClick={resetGame}
-            className="flex-1 flex items-center justify-center gap-2 bg-[#1a1a1c] border border-slate-800 hover:border-slate-500 hover:text-white text-slate-300 py-2.5 rounded-[4px] font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-2 bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 hover:border-zinc-400 dark:hover:border-slate-500 hover:text-zinc-950 dark:hover:text-white text-zinc-700 dark:text-slate-300 py-2.5 rounded-[4px] font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
           >
-            <RotateCcw className="w-4 h-4 text-cyan-400" /> Restart
+            <RotateCcw className="w-4 h-4 text-cyan-500 dark:text-cyan-400" /> Restart
           </button>
         </div>
       </div>
@@ -479,14 +492,14 @@ export const NeonPong: FC = () => {
       {/* Settings & Stats Column */}
       <div className="w-full lg:w-80 flex flex-col gap-6">
         {/* Game Settings */}
-        <div className="bg-[#1a1a1c] border border-slate-800 rounded-[4px] p-6 flex flex-col gap-6">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-            <Settings className="w-4 h-4 text-slate-400" /> Match Settings
+        <div className="bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 rounded-[4px] p-6 flex flex-col gap-6">
+          <h3 className="text-xs font-bold text-zinc-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <Settings className="w-4 h-4 text-zinc-550 dark:text-slate-400" /> Match Settings
           </h3>
 
           {/* Mode Selector */}
           <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <div className="text-[10px] font-bold text-zinc-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5" /> Game Mode
             </div>
             <div className="flex gap-2">
@@ -496,8 +509,8 @@ export const NeonPong: FC = () => {
                 disabled={gameState.status === 'PLAYING' || gameState.status === 'PAUSED'}
                 className={`flex-1 py-2 rounded-[4px] border text-[10px] font-bold transition-all disabled:opacity-50 ${
                   mode === 'vs_ai'
-                    ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50'
-                    : 'bg-black/30 border-slate-800 text-slate-400 hover:border-slate-600'
+                    ? 'bg-cyan-500/20 text-cyan-500 dark:text-cyan-400 border-cyan-500/50'
+                    : 'bg-zinc-200/50 dark:bg-black/30 border-zinc-300 dark:border-slate-800 text-zinc-600 dark:text-slate-400 hover:border-zinc-400 dark:hover:border-slate-600 hover:text-zinc-950 dark:hover:text-white'
                 }`}
               >
                 vs AI
@@ -508,8 +521,8 @@ export const NeonPong: FC = () => {
                 disabled={gameState.status === 'PLAYING' || gameState.status === 'PAUSED'}
                 className={`flex-1 py-2 rounded-[4px] border text-[10px] font-bold transition-all disabled:opacity-50 ${
                   mode === 'pvp'
-                    ? 'bg-purple-500/20 text-purple-400 border-purple-500/50'
-                    : 'bg-black/30 border-slate-800 text-slate-400 hover:border-slate-600'
+                    ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/50'
+                    : 'bg-zinc-200/50 dark:bg-black/30 border-zinc-300 dark:border-slate-800 text-zinc-600 dark:text-slate-400 hover:border-zinc-400 dark:hover:border-slate-600 hover:text-zinc-950 dark:hover:text-white'
                 }`}
               >
                 Local PvP
@@ -520,7 +533,7 @@ export const NeonPong: FC = () => {
           {/* Difficulty Selector (Only for AI mode) */}
           {mode === 'vs_ai' && (
             <div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <div className="text-[10px] font-bold text-zinc-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <Monitor className="w-3.5 h-3.5" /> AI Difficulty
               </div>
               <div className="flex gap-1.5">
@@ -532,8 +545,8 @@ export const NeonPong: FC = () => {
                     disabled={gameState.status === 'PLAYING' || gameState.status === 'PAUSED'}
                     className={`flex-1 py-2 rounded-[4px] border text-[9px] font-bold transition-all disabled:opacity-50 ${
                       difficulty === diff
-                        ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50'
-                        : 'bg-black/30 border-slate-800 text-slate-400 hover:border-slate-600'
+                        ? 'bg-cyan-500/20 text-cyan-500 dark:text-cyan-400 border-cyan-500/50'
+                        : 'bg-zinc-200/50 dark:bg-black/30 border-zinc-300 dark:border-slate-800 text-zinc-650 dark:text-slate-400 hover:border-zinc-400 dark:hover:border-slate-600 hover:text-zinc-955 dark:hover:text-white'
                     }`}
                   >
                     {diff}
@@ -545,7 +558,7 @@ export const NeonPong: FC = () => {
 
           {/* Audio Controls */}
           <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+            <div className="text-[10px] font-bold text-zinc-500 dark:text-slate-400 uppercase tracking-wider mb-2">
               Audio Settings
             </div>
             <button
@@ -554,15 +567,15 @@ export const NeonPong: FC = () => {
                 const newMute = audio.toggleMute();
                 setMuted(newMute);
               }}
-              className="flex items-center justify-center gap-2 w-full py-2 rounded-[4px] border text-[10px] font-bold transition-all cursor-pointer bg-black/30 border-slate-800 text-slate-400 hover:border-slate-500 hover:text-white"
+              className="flex items-center justify-center gap-2 w-full py-2 rounded-[4px] border text-[10px] font-bold transition-all cursor-pointer bg-zinc-200/50 dark:bg-black/30 border-zinc-300 dark:border-slate-800 text-zinc-650 dark:text-slate-400 hover:border-zinc-400 dark:hover:border-slate-500 hover:text-zinc-950 dark:hover:text-white"
             >
               {muted ? (
                 <>
-                  <VolumeX className="w-3.5 h-3.5 text-red-400" /> Muted
+                  <VolumeX className="w-3.5 h-3.5 text-red-500" /> Muted
                 </>
               ) : (
                 <>
-                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> Sound Enabled
+                  <Volume2 className="w-3.5 h-3.5 text-emerald-500" /> Sound Enabled
                 </>
               )}
             </button>
@@ -570,46 +583,65 @@ export const NeonPong: FC = () => {
         </div>
 
         {/* Stats Panel */}
-        <div className="bg-[#1a1a1c] border border-slate-800 rounded-[4px] p-6 flex flex-col gap-4">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+        <div className="bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 rounded-[4px] p-6 flex flex-col gap-4">
+          <h3 className="text-xs font-bold text-zinc-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
             <Trophy className="w-4 h-4 text-purple-500" /> Player Stats
           </h3>
           
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <span className="text-xs text-slate-400 font-medium">Wins vs AI</span>
-              <span className="text-sm font-black text-cyan-400 font-mono">{stats.winsAI}</span>
+            <div className="flex items-center justify-between border-b border-zinc-200 dark:border-slate-850 pb-3">
+              <span className="text-xs text-zinc-600 dark:text-slate-400 font-medium">Wins vs AI</span>
+              <span className="text-sm font-black text-cyan-600 dark:text-cyan-400 font-mono">{stats.winsAI}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-400 font-medium">Longest Rally</span>
-              <span className="text-sm font-black text-purple-400 font-mono">{stats.longestRally}</span>
+              <span className="text-xs text-zinc-600 dark:text-slate-400 font-medium">Longest Rally</span>
+              <span className="text-sm font-black text-purple-600 dark:text-purple-400 font-mono">{stats.longestRally}</span>
             </div>
           </div>
         </div>
         
         {/* Controls Info */}
-        <div className="hidden lg:block bg-[#1a1a1c] border border-slate-800 rounded-[4px] p-6">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Controls</h3>
-          <ul className="text-xs space-y-3 text-slate-400">
-            <li className="flex justify-between items-center border-b border-slate-900 pb-2">
-              <span className="text-purple-400">P1 Up / Down</span>
-              <kbd className="bg-black/50 border border-slate-800 px-2 py-0.5 rounded text-[#e8e8ea] text-[10px] font-mono">W / S</kbd>
-            </li>
-            {mode === 'pvp' && (
-              <li className="flex justify-between items-center border-b border-slate-900 pb-2">
-                <span className="text-purple-400">P2 Up / Down</span>
-                <kbd className="bg-black/50 border border-slate-800 px-2 py-0.5 rounded text-[#e8e8ea] text-[10px] font-mono">▲ / ▼</kbd>
+        <div className="hidden lg:block bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 rounded-[4px] p-6">
+          <h3 className="text-xs font-bold text-zinc-800 dark:text-white uppercase tracking-wider mb-4">Controls</h3>
+          {useTouchLayout ? (
+            <ul className="text-xs space-y-3 text-zinc-655 dark:text-slate-400">
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span className="text-purple-600 dark:text-purple-450">Player 1 Move</span>
+                <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">Touch & Drag Left Side</span>
               </li>
-            )}
-            <li className="flex justify-between items-center border-b border-slate-900 pb-2">
-              <span>Mobile Control</span>
-              <span className="text-[10px] font-mono">Touch & Drag</span>
-            </li>
-            <li className="flex justify-between items-center">
-              <span>Pause / Resume</span>
-              <kbd className="bg-black/50 border border-slate-800 px-2 py-0.5 rounded text-[#e8e8ea] text-[10px] font-mono">Space</kbd>
-            </li>
-          </ul>
+              {mode === 'pvp' && (
+                <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                  <span className="text-purple-600 dark:text-purple-450">Player 2 Move</span>
+                  <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">Touch & Drag Right Side</span>
+                </li>
+              )}
+              <li className="flex justify-between items-center">
+                <span>Pause / Resume</span>
+                <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">Tap Pause Button</span>
+              </li>
+            </ul>
+          ) : (
+            <ul className="text-xs space-y-3 text-zinc-650 dark:text-slate-400">
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span className="text-purple-600 dark:text-purple-450">P1 Up / Down</span>
+                <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-slate-800 px-2 py-0.5 rounded text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono">W / S</kbd>
+              </li>
+              {mode === 'pvp' && (
+                <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                  <span className="text-purple-600 dark:text-purple-450">P2 Up / Down</span>
+                  <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-slate-800 px-2 py-0.5 rounded text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono">▲ / ▼</kbd>
+                </li>
+              )}
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Mobile Control</span>
+                <span className="text-[10px] font-mono text-zinc-500 dark:text-slate-500">Touch & Drag</span>
+              </li>
+              <li className="flex justify-between items-center">
+                <span>Pause / Resume</span>
+                <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-slate-800 px-2 py-0.5 rounded text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono">Space</kbd>
+              </li>
+            </ul>
+          )}
         </div>
       </div>
     </div>

@@ -9,6 +9,19 @@ import type { Level } from './bounce.logic';
 import { LEVELS } from './bounce.logic';
 
 export const Bounce: FC = () => {
+  // --- Touch Layout Detection ---
+  const [useTouchLayout, setUseTouchLayout] = useState(false);
+  useEffect(() => {
+    const checkTouch = () => {
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isMobileViewport = window.innerWidth < 768;
+      setUseTouchLayout(hasTouch || isMobileViewport);
+    };
+    checkTouch();
+    window.addEventListener('resize', checkTouch);
+    return () => window.removeEventListener('resize', checkTouch);
+  }, []);
+
   // --- Game State ---
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
@@ -780,7 +793,7 @@ export const Bounce: FC = () => {
 
         {/* Mobile Control Panel */}
         {(gameStatus === 'PLAYING' || gameStatus === 'PAUSED') && (
-          <div className="mt-6 flex justify-between w-[min(100vw-32px,600px)] px-2 md:hidden">
+          <div className={`mt-6 justify-between w-[min(100vw-32px,600px)] px-2 ${useTouchLayout ? 'flex' : 'flex md:hidden'}`}>
             {/* D-Pad Left / Right */}
             <div className="flex gap-4">
               <button
@@ -870,26 +883,43 @@ export const Bounce: FC = () => {
           <h3 className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider mb-4">
             Instructions
           </h3>
-          <ul className="text-xs space-y-3 text-zinc-655 dark:text-slate-400">
-            <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
-              <span>Roll Ball</span>
-              <span className="flex gap-1">
-                <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-zinc-800 px-1.5 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono font-bold">A / D</kbd>
-                <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-zinc-800 px-1.5 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono font-bold">◀▶</kbd>
-              </span>
-            </li>
-            <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
-              <span>Jump</span>
-              <span className="flex gap-1">
-                <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-zinc-800 px-1.5 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono font-bold">W</kbd>
-                <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-zinc-800 px-1.5 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono font-bold">▲</kbd>
-              </span>
-            </li>
-            <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
-              <span>Pause / Resume</span>
-              <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-zinc-800 px-1.5 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono font-bold">Space</kbd>
-            </li>
-          </ul>
+          {useTouchLayout ? (
+            <ul className="text-xs space-y-3 text-zinc-655 dark:text-slate-400">
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Roll Left / Right</span>
+                <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">Tap Left / Right Arrows</span>
+              </li>
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Jump</span>
+                <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">Tap Red Button</span>
+              </li>
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Pause / Resume</span>
+                <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">Tap Pause Button</span>
+              </li>
+            </ul>
+          ) : (
+            <ul className="text-xs space-y-3 text-zinc-655 dark:text-slate-400">
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Roll Ball</span>
+                <span className="flex gap-1">
+                  <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-zinc-800 px-1.5 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono font-bold">A / D</kbd>
+                  <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-zinc-800 px-1.5 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono font-bold">◀▶</kbd>
+                </span>
+              </li>
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Jump</span>
+                <span className="flex gap-1">
+                  <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-zinc-800 px-1.5 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono font-bold">W</kbd>
+                  <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-zinc-800 px-1.5 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono font-bold">▲</kbd>
+                </span>
+              </li>
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Pause / Resume</span>
+                <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-300 dark:border-zinc-800 px-1.5 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono font-bold">Space</kbd>
+              </li>
+            </ul>
+          )}
         </div>
 
         {/* Leaderboard */}
