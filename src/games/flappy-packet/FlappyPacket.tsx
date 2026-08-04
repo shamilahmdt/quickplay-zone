@@ -12,6 +12,7 @@ const PIPE_WIDTH = 50;
 const PIPE_GAP = 120;
 const PIPE_SPAWN_FRAMES = 90;
 const PACKET_RADIUS = 12;
+const GROUND_HEIGHT = 40;
 
 interface Pipe {
   x: number;
@@ -39,11 +40,12 @@ export const FlappyPacket: FC = () => {
 
   // Mutable game state
   const gameState = useRef({
-    packetY: 200,
+    packetY: 500 - GROUND_HEIGHT - PACKET_RADIUS, // Start on the ground
     velocity: 0,
     pipes: [] as Pipe[],
     frameCount: 0,
     spacePressed: false,
+    hasLeftGround: false, // Flag to prevent immediate game over at start
   });
 
   // --- Storage Effects ---
@@ -56,11 +58,12 @@ export const FlappyPacket: FC = () => {
 
   // --- Game Actions ---
   const resetGame = () => {
-    gameState.current.packetY = 200;
-    gameState.current.velocity = 0;
+    gameState.current.packetY = 500 - GROUND_HEIGHT - PACKET_RADIUS;
+    gameState.current.velocity = FLAP_STRENGTH; // Start with a flap/jump upward
     gameState.current.pipes = [];
     gameState.current.frameCount = 0;
     gameState.current.spacePressed = false;
+    gameState.current.hasLeftGround = false; // Reset safety flag
     
     setScore(0);
     setShowNamePrompt(false);
@@ -69,6 +72,11 @@ export const FlappyPacket: FC = () => {
   };
 
   const quitGame = () => {
+    gameState.current.packetY = 500 - GROUND_HEIGHT - PACKET_RADIUS;
+    gameState.current.velocity = 0;
+    gameState.current.pipes = [];
+    gameState.current.frameCount = 0;
+    gameState.current.hasLeftGround = false;
     setScore(0);
     setShowNamePrompt(false);
     setName('');
@@ -151,7 +159,7 @@ export const FlappyPacket: FC = () => {
 
     const spawnPipe = () => {
       const minHeight = 50;
-      const maxHeight = h - PIPE_GAP - minHeight;
+      const maxHeight = h - GROUND_HEIGHT - PIPE_GAP - minHeight;
       const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
       
       gameState.current.pipes.push({
@@ -206,7 +214,16 @@ export const FlappyPacket: FC = () => {
           setScore(currentScore);
         }
 
-        if (state.packetY + PACKET_RADIUS > h || state.packetY - PACKET_RADIUS < 0) {
+        // Set safety flag once the bird rises above the ground zone
+        if (!state.hasLeftGround && state.packetY + PACKET_RADIUS < h - GROUND_HEIGHT - 5) {
+          state.hasLeftGround = true;
+        }
+
+        // Collision with top of screen, or ground (only after leaving the ground initially)
+        const hitGround = state.hasLeftGround && (state.packetY + PACKET_RADIUS > h - GROUND_HEIGHT);
+        const hitTop = state.packetY - PACKET_RADIUS < 0;
+
+        if (hitGround || hitTop) {
           collision = true;
         }
 
@@ -222,26 +239,40 @@ export const FlappyPacket: FC = () => {
         }
       }
       
+      // Draw Pipes
       ctx.fillStyle = '#06b6d4';
       ctx.shadowBlur = 10;
       ctx.shadowColor = '#06b6d4';
       
       gameState.current.pipes.forEach(p => {
         ctx.fillRect(p.x, 0, PIPE_WIDTH, p.topHeight);
-        ctx.fillRect(p.x, p.bottomY, PIPE_WIDTH, h - p.bottomY);
+        ctx.fillRect(p.x, p.bottomY, PIPE_WIDTH, h - GROUND_HEIGHT - p.bottomY);
       });
       
       ctx.shadowBlur = 0;
 
-      ctx.beginPath();
-      ctx.arc(100, gameState.current.packetY, PACKET_RADIUS, 0, Math.PI * 2);
-      ctx.fillStyle = '#d946ef';
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = '#d946ef';
-      ctx.fill();
-      ctx.closePath();
+      // Draw Ground
+      ctx.fillStyle = dark ? '#1e293b' : '#cbd5e1';
+      ctx.fillRect(0, h - GROUND_HEIGHT, w, GROUND_HEIGHT);
+      ctx.fillStyle = dark ? '#10b981' : '#059669';
+      ctx.fillRect(0, h - GROUND_HEIGHT, w, 4);
+
+      // Draw Bird (emoji 🐤)
+      ctx.save();
+      ctx.translate(100, gameState.current.packetY);
       
-      ctx.shadowBlur = 0;
+      if (gameStatus === 'PLAYING') {
+        const rotation = Math.max(-0.4, Math.min(0.8, gameState.current.velocity * 0.08));
+        ctx.rotate(rotation);
+      }
+      
+      ctx.scale(-1, 1); // Flip horizontally so the bird faces right
+      
+      ctx.font = '24px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🐤', 0, 0);
+      ctx.restore();
 
       if (gameStatus === 'PLAYING' || gameStatus === 'IDLE' || gameStatus === 'PAUSED') {
         animationFrameId.current = requestAnimationFrame(updateAndDraw);

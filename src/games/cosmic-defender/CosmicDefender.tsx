@@ -8,6 +8,19 @@ import { Award, Play, Pause, RotateCcw, Shield, Rocket, Volume2, VolumeX } from 
 import { audio } from '../../core/audio';
 
 export const CosmicDefender: FC = () => {
+  // --- Touch Layout Detection ---
+  const [useTouchLayout, setUseTouchLayout] = useState(false);
+  useEffect(() => {
+    const checkTouch = () => {
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isMobileViewport = window.innerWidth < 768;
+      setUseTouchLayout(hasTouch || isMobileViewport);
+    };
+    checkTouch();
+    window.addEventListener('resize', checkTouch);
+    return () => window.removeEventListener('resize', checkTouch);
+  }, []);
+
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -56,6 +69,7 @@ export const CosmicDefender: FC = () => {
   const stars = useRef<Star[]>([]);
   const lastShotTime = useRef<number>(0);
   const spawnTimer = useRef<number>(0);
+  const isDragging = useRef<boolean>(false);
 
   // Load highscore when settings change
   useEffect(() => {
@@ -380,57 +394,114 @@ export const CosmicDefender: FC = () => {
       {/* Game board column */}
       <div className="flex-1 flex flex-col items-center">
         {/* Game Stats Hub */}
-        <div className="flex justify-between items-center w-full max-w-[480px] mb-4 bg-[#1a1a1c] border border-slate-800 p-4 rounded-[4px]">
+        <div className="flex justify-between items-center w-full max-w-[480px] mb-4 bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 p-4 rounded-[4px]">
           <div>
-            <div className="text-xs text-slate-500 font-semibold mb-0.5 flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-slate-500" /> Lives
+            <div className="text-xs text-zinc-500 dark:text-slate-400 font-semibold mb-0.5 flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-zinc-500 dark:text-slate-550" /> Lives
             </div>
             <div className="flex gap-1">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div
                   key={i}
                   className={`w-3.5 h-3.5 rounded-full border transition-colors ${
-                    i < lives ? 'bg-cyan-500 border-cyan-400' : 'bg-transparent border-slate-800'
+                    i < lives ? 'bg-cyan-500 border-cyan-400' : 'bg-transparent border-zinc-300 dark:border-slate-800'
                   }`}
                 />
               ))}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-xs text-slate-500 font-semibold mb-0.5">Score</div>
-            <div className="text-xl font-bold text-white font-mono">{score}</div>
+            <div className="text-xs text-zinc-500 dark:text-slate-400 font-semibold mb-0.5">Score</div>
+            <div className="text-xl font-bold text-zinc-900 dark:text-white font-mono">{score}</div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-slate-500 font-semibold mb-0.5 flex items-center justify-end gap-1">
-              <Award className="w-3.5 h-3.5 text-slate-500" /> Best Score
+            <div className="text-xs text-zinc-500 dark:text-slate-400 font-semibold mb-0.5 flex items-center justify-end gap-1">
+              <Award className="w-3.5 h-3.5 text-zinc-550 dark:text-slate-500" /> Best Score
             </div>
-            <div className="text-xl font-bold text-white font-mono">{highScore}</div>
+            <div className="text-xl font-bold text-zinc-900 dark:text-white font-mono">{highScore}</div>
           </div>
         </div>
 
         {/* Board & Controls Wrapper */}
         <div className="w-full max-w-[480px] flex flex-col items-center">
           {/* Board Canvas container */}
-          <div className="relative border border-slate-800 rounded-[4px] overflow-hidden bg-[#09090b] w-full">
+          <div className="relative border border-zinc-200 dark:border-slate-800 rounded-[4px] overflow-hidden bg-[#09090b] w-full">
             <canvas
               ref={canvasRef}
               width={COSMIC_DEFENDER_CONFIG.CANVAS_WIDTH}
               height={COSMIC_DEFENDER_CONFIG.CANVAS_HEIGHT}
-              className="block w-full aspect-square"
+              className="block w-full aspect-square touch-none cursor-crosshair"
+              onTouchStart={(e) => {
+                if (gameStatus !== 'PLAYING') return;
+                e.preventDefault();
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                const scaleX = canvas.width / rect.width;
+                const canvasX = (touch.clientX - rect.left) * scaleX;
+                playerX.current = Math.max(20, Math.min(canvas.width - 20, canvasX));
+                shootBullet();
+                keysPressed.current['Space'] = true;
+              }}
+              onTouchMove={(e) => {
+                if (gameStatus !== 'PLAYING') return;
+                e.preventDefault();
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                const scaleX = canvas.width / rect.width;
+                const canvasX = (touch.clientX - rect.left) * scaleX;
+                playerX.current = Math.max(20, Math.min(canvas.width - 20, canvasX));
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                keysPressed.current['Space'] = false;
+              }}
+              onMouseDown={(e) => {
+                if (gameStatus !== 'PLAYING') return;
+                isDragging.current = true;
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const canvasX = (e.clientX - rect.left) * scaleX;
+                playerX.current = Math.max(20, Math.min(canvas.width - 20, canvasX));
+                shootBullet();
+                keysPressed.current['Space'] = true;
+              }}
+              onMouseMove={(e) => {
+                if (gameStatus !== 'PLAYING' || !isDragging.current) return;
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const canvasX = (e.clientX - rect.left) * scaleX;
+                playerX.current = Math.max(20, Math.min(canvas.width - 20, canvasX));
+              }}
+              onMouseUp={() => {
+                isDragging.current = false;
+                keysPressed.current['Space'] = false;
+              }}
+              onMouseLeave={() => {
+                isDragging.current = false;
+                keysPressed.current['Space'] = false;
+              }}
             />
 
             {/* Overlays */}
             {gameStatus === 'IDLE' && (
-              <div className="absolute inset-0 bg-[#121214]/95 flex flex-col items-center justify-center p-6 text-center z-20">
-                <Rocket className="w-12 h-12 text-[#e8e8ea] mb-3 animate-bounce" />
-                <h3 className="text-base font-bold text-white mb-4 uppercase tracking-wider">Cosmic Defender</h3>
-                <p className="text-xs text-slate-500 mb-6 max-w-[240px]">
+              <div className="absolute inset-0 bg-white/95 dark:bg-[#121214]/95 flex flex-col items-center justify-center p-6 text-center z-20">
+                <Rocket className="w-12 h-12 text-zinc-800 dark:text-[#e8e8ea] mb-3 animate-bounce" />
+                <h3 className="text-base font-bold text-zinc-900 dark:text-white mb-4 uppercase tracking-wider">Cosmic Defender</h3>
+                <p className="text-xs text-zinc-650 dark:text-slate-500 mb-6 max-w-[240px]">
                   Use A/D or Arrow keys to steer, Space to shoot lasers. Survive the alien wave!
                 </p>
 
                 <button
                   onClick={resetGame}
-                  className="flex items-center justify-center gap-2 bg-white text-black font-bold px-6 py-2.5 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer w-full max-w-xs"
+                  className="flex items-center justify-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold px-6 py-2.5 rounded-[4px] border border-zinc-900 dark:border-white hover:bg-transparent hover:text-zinc-900 dark:hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer w-full max-w-xs"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" /> Deploy Ship
                 </button>
@@ -438,18 +509,18 @@ export const CosmicDefender: FC = () => {
             )}
 
             {gameStatus === 'PAUSED' && (
-              <div className="absolute inset-0 bg-[#121214]/95 flex flex-col items-center justify-center p-6 gap-4 animate-fade-in z-20">
-                <h3 className="text-lg font-bold text-white uppercase tracking-wider">Mission Paused</h3>
+              <div className="absolute inset-0 bg-white/95 dark:bg-[#121214]/95 flex flex-col items-center justify-center p-6 gap-4 animate-fade-in z-20">
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white uppercase tracking-wider">Mission Paused</h3>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setGameStatus('PLAYING')}
-                    className="flex items-center gap-2 bg-white text-black font-bold px-5 py-2.5 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
+                    className="flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold px-5 py-2.5 rounded-[4px] border border-zinc-900 dark:border-white hover:bg-transparent hover:text-zinc-900 dark:hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" /> Resume
                   </button>
                   <button
                     onClick={quitGame}
-                    className="flex items-center gap-2 bg-[#1a1a1c] text-slate-400 font-bold px-5 py-2.5 rounded-[4px] border border-slate-800 hover:border-slate-500 hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
+                    className="flex items-center gap-2 bg-zinc-100 dark:bg-[#1a1a1c] text-zinc-500 dark:text-slate-400 font-bold px-5 py-2.5 rounded-[4px] border border-zinc-200 dark:border-slate-800 hover:border-zinc-400 dark:hover:border-slate-500 hover:text-zinc-900 dark:hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" /> Abort
                   </button>
@@ -458,13 +529,13 @@ export const CosmicDefender: FC = () => {
             )}
 
             {gameStatus === 'GAME_OVER' && (
-              <div className="absolute inset-0 bg-[#121214]/95 flex flex-col items-center justify-center p-6 text-center z-20">
-                <h3 className="text-lg font-bold text-red-500 mb-2 uppercase tracking-wider">Shield Defeated</h3>
-                <p className="text-slate-400 mb-4 font-medium">Aliens eliminated score: <span className="text-white">{score}</span></p>
+              <div className="absolute inset-0 bg-white/95 dark:bg-[#121214]/95 flex flex-col items-center justify-center p-6 text-center z-20">
+                <h3 className="text-lg font-bold text-red-655 dark:text-red-500 mb-2 uppercase tracking-wider">Shield Defeated</h3>
+                <p className="text-zinc-650 dark:text-slate-300 mb-4 font-medium">Aliens eliminated score: <span className="text-zinc-900 dark:text-white font-bold">{score}</span></p>
 
                 {showNamePrompt ? (
                   <div className="w-full max-w-xs flex flex-col gap-3">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="text-[10px] font-bold text-zinc-500 dark:text-slate-400 uppercase tracking-wider">
                       New High Score! Enter Defender Name
                     </div>
                     <input
@@ -473,18 +544,18 @@ export const CosmicDefender: FC = () => {
                       placeholder="Your name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-[#1a1a1c] border border-slate-800 rounded-[4px] px-3 py-2 text-[#e8e8ea] placeholder-slate-600 text-center text-base font-medium focus:outline-none focus:border-white transition-colors"
+                      className="w-full bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-300 dark:border-slate-800 rounded-[4px] px-3 py-2 text-zinc-900 dark:text-[#e8e8ea] placeholder-zinc-450 dark:placeholder-slate-600 text-center text-base font-medium focus:outline-none focus:border-zinc-500 dark:focus:border-white transition-colors"
                     />
                     <div className="flex gap-2 w-full">
                       <button
                         onClick={handleSaveScore}
-                        className="flex-1 bg-white text-black font-bold py-2 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors text-xs uppercase tracking-wider cursor-pointer"
+                        className="flex-1 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold py-2 rounded-[4px] border border-zinc-900 dark:border-white hover:bg-transparent hover:text-zinc-900 dark:hover:text-white transition-colors text-xs uppercase tracking-wider cursor-pointer"
                       >
                         Save
                       </button>
                       <button
                         onClick={handleSkipSaveScore}
-                        className="flex-1 bg-[#1a1a1c] text-slate-400 font-bold py-2 rounded-[4px] border border-slate-800 hover:border-slate-500 hover:text-white transition-colors text-xs uppercase tracking-wider cursor-pointer"
+                        className="flex-1 bg-zinc-100 dark:bg-[#1a1a1c] text-zinc-500 dark:text-slate-400 font-bold py-2 rounded-[4px] border border-zinc-200 dark:border-slate-800 hover:border-zinc-400 dark:hover:border-slate-500 hover:text-zinc-900 dark:hover:text-white transition-colors text-xs uppercase tracking-wider cursor-pointer"
                       >
                         Skip
                       </button>
@@ -493,7 +564,7 @@ export const CosmicDefender: FC = () => {
                 ) : (
                   <button
                     onClick={resetGame}
-                    className="flex items-center gap-2 bg-white text-black font-bold px-6 py-2.5 rounded-[4px] border border-white hover:bg-transparent hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
+                    className="flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold px-6 py-2.5 rounded-[4px] border border-zinc-900 dark:border-white hover:bg-transparent hover:text-zinc-900 dark:hover:text-white transition-colors uppercase tracking-wider text-xs cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" /> Re-deploy Ship
                   </button>
@@ -503,7 +574,7 @@ export const CosmicDefender: FC = () => {
           </div>
 
           {/* Onscreen controls for mobile view */}
-          <div className="mt-6 flex gap-2 sm:gap-4 justify-between w-full">
+          <div className={`mt-6 gap-2 sm:gap-4 justify-between w-full ${useTouchLayout ? 'flex' : 'hidden md:flex'}`}>
             <div className="flex gap-1.5 sm:gap-2">
               <button
                 onMouseDown={() => { keysPressed.current['ArrowLeft'] = true; }}
@@ -511,7 +582,7 @@ export const CosmicDefender: FC = () => {
                 onTouchStart={(e) => { e.preventDefault(); keysPressed.current['ArrowLeft'] = true; }}
                 onTouchEnd={(e) => { e.preventDefault(); keysPressed.current['ArrowLeft'] = false; }}
                 onTouchCancel={(e) => { e.preventDefault(); keysPressed.current['ArrowLeft'] = false; }}
-                className="w-11 h-11 sm:w-14 sm:h-14 bg-[#1a1a1c] border border-slate-800 active:bg-white active:text-black rounded-[4px] flex items-center justify-center text-slate-300 font-bold select-none cursor-pointer"
+                className="w-11 h-11 sm:w-14 sm:h-14 bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 active:bg-zinc-900 dark:active:bg-white active:text-white dark:active:text-black rounded-[4px] flex items-center justify-center text-zinc-700 dark:text-slate-300 font-bold select-none cursor-pointer"
               >
                 ◀
               </button>
@@ -521,7 +592,7 @@ export const CosmicDefender: FC = () => {
                 onTouchStart={(e) => { e.preventDefault(); keysPressed.current['ArrowRight'] = true; }}
                 onTouchEnd={(e) => { e.preventDefault(); keysPressed.current['ArrowRight'] = false; }}
                 onTouchCancel={(e) => { e.preventDefault(); keysPressed.current['ArrowRight'] = false; }}
-                className="w-11 h-11 sm:w-14 sm:h-14 bg-[#1a1a1c] border border-slate-800 active:bg-white active:text-black rounded-[4px] flex items-center justify-center text-slate-300 font-bold select-none cursor-pointer"
+                className="w-11 h-11 sm:w-14 sm:h-14 bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 active:bg-zinc-900 dark:active:bg-white active:text-white dark:active:text-black rounded-[4px] flex items-center justify-center text-zinc-700 dark:text-slate-300 font-bold select-none cursor-pointer"
               >
                 ▶
               </button>
@@ -534,7 +605,7 @@ export const CosmicDefender: FC = () => {
                   else if (gameStatus === 'PAUSED') setGameStatus('PLAYING');
                 }}
                 disabled={gameStatus === 'IDLE' || gameStatus === 'GAME_OVER'}
-                className="w-11 h-11 sm:w-14 sm:h-14 bg-[#1a1a1c] border border-slate-800 disabled:opacity-40 disabled:cursor-not-allowed rounded-[4px] flex items-center justify-center text-slate-300 select-none cursor-pointer"
+                className="w-11 h-11 sm:w-14 sm:h-14 bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 disabled:opacity-40 disabled:cursor-not-allowed rounded-[4px] flex items-center justify-center text-zinc-700 dark:text-slate-300 select-none cursor-pointer"
               >
                 {gameStatus === 'PLAYING' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
               </button>
@@ -556,8 +627,8 @@ export const CosmicDefender: FC = () => {
       {/* Leaderboard & Controls column */}
       <div className="w-full lg:w-80 flex flex-col gap-6">
         {/* Real-time Settings Panel */}
-        <div className="bg-[#1a1a1c] border border-slate-800 rounded-[4px] p-6 flex flex-col gap-4">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 rounded-[4px] p-6 flex flex-col gap-4">
+          <h3 className="text-xs font-bold text-zinc-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
             Settings
           </h3>
 
@@ -569,15 +640,15 @@ export const CosmicDefender: FC = () => {
                 const newMute = audio.toggleMute();
                 setMuted(newMute);
               }}
-              className="flex items-center justify-center gap-2 w-full py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer bg-black/30 border-slate-800 text-slate-400 hover:border-slate-500 hover:text-white"
+              className="flex items-center justify-center gap-2 w-full py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer bg-zinc-200/50 dark:bg-black/30 border-zinc-300 dark:border-slate-800 text-zinc-655 dark:text-slate-400 hover:border-zinc-400 dark:hover:border-slate-500 hover:text-zinc-955 dark:hover:text-white"
             >
               {muted ? (
                 <>
-                  <VolumeX className="w-3.5 h-3.5 text-red-400" /> Muted
+                  <VolumeX className="w-3.5 h-3.5 text-red-500" /> Muted
                 </>
               ) : (
                 <>
-                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> Sound Enabled
+                  <Volume2 className="w-3.5 h-3.5 text-emerald-500" /> Sound Enabled
                 </>
               )}
             </button>
@@ -593,8 +664,8 @@ export const CosmicDefender: FC = () => {
                   disabled={gameStatus === 'PLAYING' || gameStatus === 'PAUSED'}
                   className={`flex-1 py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                     difficulty === diff
-                      ? 'bg-white text-black border-white'
-                      : 'bg-black/30 border-slate-800 text-slate-400 hover:border-slate-500'
+                      ? 'bg-zinc-900 dark:bg-white text-white dark:text-black border-zinc-900 dark:border-white'
+                      : 'bg-zinc-200/50 dark:bg-black/30 border-zinc-300 dark:border-slate-800 text-zinc-600 dark:text-slate-400 hover:border-zinc-400 dark:hover:border-slate-500 hover:text-zinc-950 dark:hover:text-white'
                   }`}
                 >
                   {diff}
@@ -605,45 +676,62 @@ export const CosmicDefender: FC = () => {
         </div>
 
         {/* Controls Info */}
-        <div className="hidden lg:block bg-[#1a1a1c] border border-slate-800 rounded-[4px] p-6">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Tactical Controls</h3>
-          <ul className="text-xs space-y-3 text-slate-400">
-            <li className="flex justify-between items-center border-b border-slate-900 pb-2">
-              <span>Steer Ship Left</span>
-              <kbd className="bg-black/50 border border-slate-800 px-2 py-0.5 rounded-[4px] text-[#e8e8ea] text-[10px] font-mono">A / ◀</kbd>
-            </li>
-            <li className="flex justify-between items-center border-b border-slate-900 pb-2">
-              <span>Steer Ship Right</span>
-              <kbd className="bg-black/50 border border-slate-800 px-2 py-0.5 rounded-[4px] text-[#e8e8ea] text-[10px] font-mono">D / ▶</kbd>
-            </li>
-            <li className="flex justify-between items-center border-b border-slate-900 pb-2">
-              <span>Fire Weapon Systems</span>
-              <kbd className="bg-black/50 border border-slate-800 px-2 py-0.5 rounded-[4px] text-[#e8e8ea] text-[10px] font-mono">Space</kbd>
-            </li>
-          </ul>
+        <div className="hidden lg:block bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 rounded-[4px] p-6">
+          <h3 className="text-xs font-bold text-zinc-800 dark:text-white uppercase tracking-wider mb-4">Tactical Controls</h3>
+          {useTouchLayout ? (
+            <ul className="text-xs space-y-3 text-zinc-655 dark:text-slate-400">
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Steer Ship</span>
+                <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">Tap Left/Right Arrow Buttons</span>
+              </li>
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Fire Weapon Systems</span>
+                <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">Tap Fire Lasers Button</span>
+              </li>
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Pause / Resume</span>
+                <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">Tap Pause Button</span>
+              </li>
+            </ul>
+          ) : (
+            <ul className="text-xs space-y-3 text-zinc-655 dark:text-slate-400">
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Steer Ship Left</span>
+                <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-350 dark:border-slate-800 px-2 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono">A / ◀</kbd>
+              </li>
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Steer Ship Right</span>
+                <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-350 dark:border-slate-800 px-2 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono">D / ▶</kbd>
+              </li>
+              <li className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-2">
+                <span>Fire Weapon Systems</span>
+                <kbd className="bg-zinc-200 dark:bg-black/50 border border-zinc-355 dark:border-slate-800 px-2 py-0.5 rounded-[4px] text-zinc-800 dark:text-[#e8e8ea] text-[10px] font-mono">Space</kbd>
+              </li>
+            </ul>
+          )}
         </div>
 
         {/* Leaderboard */}
-        <div className="bg-[#1a1a1c] border border-slate-800 rounded-[4px] p-6 flex-1 flex flex-col">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Award className="w-4 h-4 text-slate-500" /> High Score Logs
+        <div className="bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 rounded-[4px] p-6 flex-1 flex flex-col">
+          <h3 className="text-xs font-bold text-zinc-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Award className="w-4 h-4 text-zinc-550 dark:text-slate-500" /> High Score Logs
           </h3>
           <div className="flex-1 overflow-y-auto max-h-[250px] space-y-2 pr-1">
             {leaderboard.length === 0 ? (
-              <p className="text-xs text-slate-500 italic text-center py-6">No mission logs yet.</p>
+              <p className="text-xs text-zinc-500 italic text-center py-6">No mission logs yet.</p>
             ) : (
               leaderboard.slice(0, 5).map((entry, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between py-2 px-3 bg-black/20 border border-slate-800 rounded-[4px]"
+                  className="flex items-center justify-between py-2 px-3 bg-zinc-200/60 dark:bg-black/20 border border-zinc-300 dark:border-slate-850 rounded-[4px]"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold font-mono text-slate-500">
+                    <span className="text-[10px] font-bold font-mono text-zinc-500 dark:text-slate-500">
                       {String(idx + 1).padStart(2, '0')}
                     </span>
-                    <span className="text-xs font-semibold text-slate-300 truncate max-w-[120px]">{entry.playerName}</span>
+                    <span className="text-xs font-semibold text-zinc-800 dark:text-slate-355 truncate max-w-[120px]">{entry.playerName}</span>
                   </div>
-                  <span className="text-xs font-bold font-mono text-white">{entry.score}</span>
+                  <span className="text-xs font-bold font-mono text-zinc-950 dark:text-white">{entry.score}</span>
                 </div>
               ))
             )}

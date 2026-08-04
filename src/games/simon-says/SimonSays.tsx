@@ -191,27 +191,27 @@ export const SimonSays: FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen w-full gap-8 px-4 py-8 select-none bg-[#121214] text-slate-100">
+    <div className="flex flex-col items-center justify-center w-full gap-8 px-4 py-8 select-none">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-wider mb-2">Simon Says</h1>
-        <p className="text-xs md:text-sm text-slate-400 font-semibold">Watch the pattern. Repeat it back. How far can you go?</p>
+        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-wider mb-2 text-zinc-900 dark:text-white">Simon Says</h1>
+        <p className="text-xs md:text-sm text-zinc-600 dark:text-slate-400 font-semibold">Watch the pattern. Repeat it back. How far can you go?</p>
       </div>
 
       {/* Score Display */}
       <div className="flex gap-8 md:gap-16">
         <div className="text-center">
-          <div className="text-xs text-slate-500 font-bold uppercase mb-1">Current</div>
-          <div className="text-3xl md:text-4xl font-black font-mono text-white">{score}</div>
+          <div className="text-xs text-zinc-500 dark:text-slate-400 font-bold uppercase mb-1">Current</div>
+          <div className="text-3xl md:text-4xl font-black font-mono text-zinc-900 dark:text-white">{score}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-slate-500 font-bold uppercase mb-1">Best</div>
-          <div className="text-3xl md:text-4xl font-black font-mono text-yellow-400">{highScore}</div>
+          <div className="text-xs text-zinc-500 dark:text-slate-400 font-bold uppercase mb-1">Best</div>
+          <div className="text-3xl md:text-4xl font-black font-mono text-yellow-500 dark:text-yellow-400">{highScore}</div>
         </div>
       </div>
 
       {/* Game Board */}
-      <div className="relative w-full max-w-sm aspect-square rounded-lg overflow-hidden border-4 border-slate-700 shadow-2xl">
+      <div className="relative w-full max-w-sm aspect-square rounded-lg overflow-hidden border-4 border-zinc-300 dark:border-slate-700 shadow-2xl">
         <div className="grid grid-cols-2 gap-0 w-full h-full">
           {SIMON_CONFIG.TILES.map((tile) => (
             <button
@@ -249,7 +249,7 @@ export const SimonSays: FC = () => {
         {gameState === 'IDLE' && (
           <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-4 z-20">
             <Zap className="w-12 h-12 text-yellow-400" />
-            <h3 className="text-lg font-bold uppercase tracking-wider">Ready?</h3>
+            <h3 className="text-lg font-bold uppercase tracking-wider text-white">Ready?</h3>
             <button
               onClick={handleStartGame}
               className="flex items-center gap-2 bg-white text-black font-bold px-6 py-2.5 rounded-lg border border-white hover:bg-transparent hover:text-white transition-colors uppercase text-sm"
@@ -299,10 +299,10 @@ export const SimonSays: FC = () => {
       <div className="flex gap-3">
         <button
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className={`p-3 rounded-lg border transition-all ${
+          className={`p-3 rounded-lg border transition-all cursor-pointer ${
             soundEnabled
-              ? 'bg-blue-950 border-blue-800 text-blue-400'
-              : 'bg-slate-900 border-slate-700 text-slate-400'
+              ? 'bg-blue-100 dark:bg-blue-950 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400'
+              : 'bg-zinc-100 dark:bg-slate-900 border-zinc-200 dark:border-slate-700 text-zinc-600 dark:text-slate-400'
           }`}
           title={soundEnabled ? 'Sound On' : 'Sound Off'}
         >
@@ -317,7 +317,7 @@ export const SimonSays: FC = () => {
                 pauseGame();
               }
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-700 text-slate-350 hover:text-white hover:border-slate-500 rounded-lg text-xs font-bold transition-all cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-slate-900 border border-zinc-200 dark:border-slate-700 text-zinc-700 dark:text-slate-350 hover:text-zinc-950 dark:hover:text-white hover:border-zinc-350 dark:hover:border-slate-500 rounded-lg text-xs font-bold transition-all cursor-pointer"
           >
             {gameState === 'PAUSED' ? (
               <>
@@ -334,7 +334,7 @@ export const SimonSays: FC = () => {
 
       {/* Game Status Info */}
       {gameState === 'INPUT' && (
-        <p className="text-xs text-slate-500 font-semibold text-center">
+        <p className="text-xs text-zinc-500 dark:text-slate-500 font-semibold text-center">
           Your turn! Tap {sequence.length} tile{sequence.length > 1 ? 's' : ''}
         </p>
       )}

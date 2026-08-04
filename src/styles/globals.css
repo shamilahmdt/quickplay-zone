@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-bg-dark: #121214;
   --color-bg-card: #1a1a1c;
@@ -11,11 +13,17 @@
 
 @layer base {
   body {
-    background-color: #121214;
-    color: #e8e8ea;
+    background-color: #f8fafc;
+    color: #0f172a;
     font-family: var(--font-sans);
     overflow-x: hidden;
   }
+  
+  html.dark body {
+    background-color: #121214;
+    color: #e8e8ea;
+  }
+  
   input, select, textarea {
     font-size: 16px;
   }
