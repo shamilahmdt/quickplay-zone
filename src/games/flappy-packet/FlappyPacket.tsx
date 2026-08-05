@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { storage } from '../../core/storage';
-import { Award, Play, Pause, RotateCcw, Target } from 'lucide-react';
+import { Award, Play, Pause, RotateCcw, Target, Volume2, VolumeX } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { audio } from '../../core/audio';
 
 // --- Game Constants ---
 const GRAVITY = 0.5;
@@ -28,6 +29,7 @@ export const FlappyPacket: FC = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [gameStatus, setGameStatus] = useState<'IDLE' | 'PLAYING' | 'PAUSED' | 'GAME_OVER'>('IDLE');
+  const [muted, setMuted] = useState(audio.getMuted());
   
   // --- Leaderboard ---
   const [leaderboard, setLeaderboard] = useState(storage.getLeaderboard('flappy_packet'));
@@ -36,6 +38,19 @@ export const FlappyPacket: FC = () => {
 
   // --- Refs ---
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // --- Audio Effects ---
+  useEffect(() => {
+    if (gameStatus === 'PLAYING') {
+      audio.startBgm('flappy');
+    } else {
+      audio.stopBgm();
+    }
+    return () => {
+      audio.stopBgm();
+    };
+  }, [gameStatus]);
+
   const animationFrameId = useRef<number | null>(null);
 
   // Mutable game state
@@ -86,6 +101,7 @@ export const FlappyPacket: FC = () => {
   const flap = () => {
     if (gameStatus === 'PLAYING') {
       gameState.current.velocity = FLAP_STRENGTH;
+      audio.playFlap();
     } else if (gameStatus === 'IDLE' || gameStatus === 'GAME_OVER') {
       if (!showNamePrompt) resetGame();
     }
@@ -212,6 +228,7 @@ export const FlappyPacket: FC = () => {
 
         if (currentScore !== score) {
           setScore(currentScore);
+          audio.playPoint();
         }
 
         // Set safety flag once the bird rises above the ground zone
@@ -229,6 +246,8 @@ export const FlappyPacket: FC = () => {
 
         if (collision) {
           setGameStatus('GAME_OVER');
+          audio.playPlayerHit();
+          audio.playGameOver();
           const currentStats = storage.getGameStats('flappy_packet');
           if (currentScore > currentStats.highScore) {
             setHighScore(currentScore);
@@ -421,6 +440,38 @@ export const FlappyPacket: FC = () => {
               <Award className={`w-3.5 h-3.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`} /> Best Score
             </div>
             <div className={`text-3xl font-bold font-mono ${dark ? 'text-white' : 'text-slate-900'}`}>{highScore}</div>
+          </div>
+        </div>
+
+        {/* Game Options / Audio Settings */}
+        <div className={`rounded-[4px] p-6 border ${dark ? 'bg-[#1a1a1c] border-slate-800' : 'bg-white border-slate-200'}`}>
+          <h3 className={`text-xs font-bold uppercase tracking-wider mb-4 ${dark ? 'text-[#e8e8ea]' : 'text-slate-800'}`}>Game Options</h3>
+          <div>
+            <div className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${dark ? 'text-slate-500' : 'text-slate-450'}`}>
+              Audio Settings
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const newMute = audio.toggleMute();
+                setMuted(newMute);
+              }}
+              className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-[4px] border text-xs font-bold transition-all cursor-pointer ${
+                dark 
+                  ? 'bg-black/30 border-slate-800 text-slate-400 hover:border-slate-500 hover:text-white' 
+                  : 'bg-slate-50 border-slate-200 text-slate-650 hover:border-slate-400 hover:text-slate-900'
+              }`}
+            >
+              {muted ? (
+                <>
+                  <VolumeX className="w-4 h-4 text-red-500" /> Muted
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-4 h-4 text-emerald-500" /> Sound Enabled
+                </>
+              )}
+            </button>
           </div>
         </div>
 
