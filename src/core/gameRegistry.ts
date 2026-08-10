@@ -7,6 +7,7 @@ import NeonPong from '../games/neon-pong/NeonPong';
 import TwentyFortyEight from '../games/twentyfortyeight/TwentyFortyEight';
 import Bounce from '../games/bounce/Bounce';
 import FlappyPacket from '../games/flappy-packet/FlappyPacket';
+import GridBlocks from '../games/grid-blocks/GridBlocks';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -80,6 +81,15 @@ export const gameRegistry: GameMeta[] = [
     category: 'Arcade',
     controls: ['Spacebar / Tap Screen: Jump / Flap upward'],
     component: FlappyPacket,
+  },
+  {
+    id: 'grid_blocks',
+    name: 'Grid Blocks',
+    description: 'Rotate and fit monochrome geometric blocks to clear rows in this classic arcade puzzle game.',
+    thumbnail: '🧱',
+    category: 'Puzzle',
+    controls: ['A/D / Left/Right: Move Blocks', 'W / Up Arrow: Rotate', 'Space: Hard Drop', 'S / Down Arrow: Soft Drop'],
+    component: GridBlocks,
   }
 ];
 
