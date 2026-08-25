@@ -8,6 +8,7 @@ import TwentyFortyEight from '../games/twentyfortyeight/TwentyFortyEight';
 import Bounce from '../games/bounce/Bounce';
 import FlappyPacket from '../games/flappy-packet/FlappyPacket';
 import GridBlocks from '../games/grid-blocks/GridBlocks';
+import MalwareSweeper from '../games/malware-sweeper/MalwareSweeper';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -90,6 +91,15 @@ export const gameRegistry: GameMeta[] = [
     category: 'Puzzle',
     controls: ['A/D / Left/Right: Move Blocks', 'W / Up Arrow: Rotate', 'Space: Hard Drop', 'S / Down Arrow: Soft Drop'],
     component: GridBlocks,
+  },
+  {
+    id: 'malware_sweeper',
+    name: 'Malware Sweeper',
+    description: 'Scan and isolate infected memory sectors. Identify all malware nodes before they compromise the system.',
+    thumbnail: '💣',
+    category: 'Puzzle',
+    controls: ['Left Click / Tap: Reveal sector', 'Right Click / Long Press: Flag suspect sector'],
+    component: MalwareSweeper,
   }
 ];
 
