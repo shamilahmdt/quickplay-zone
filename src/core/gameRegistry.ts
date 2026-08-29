@@ -8,6 +8,7 @@ import TwentyFortyEight from '../games/twentyfortyeight/TwentyFortyEight';
 import Bounce from '../games/bounce/Bounce';
 import FlappyPacket from '../games/flappy-packet/FlappyPacket';
 import GridBlocks from '../games/grid-blocks/GridBlocks';
+import HighwayCrosser from '../games/highway-crosser/HighwayCrosser';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -50,7 +51,7 @@ export const gameRegistry: GameMeta[] = [
     id: "neon_pong",
     name: "Neon Pong",
     description: "Classic retro tennis. Play against the AI or challenge a friend locally!",
-    thumbnail: "🏓", 
+    thumbnail: "🏓",
     category: "Sports",
     controls: ["W/S: Move Left Paddle", "Up/Down: Move Right Paddle", "Space: Pause"],
     component: NeonPong,
@@ -90,6 +91,15 @@ export const gameRegistry: GameMeta[] = [
     category: 'Puzzle',
     controls: ['A/D / Left/Right: Move Blocks', 'W / Up Arrow: Rotate', 'Space: Hard Drop', 'S / Down Arrow: Soft Drop'],
     component: GridBlocks,
+  },
+  {
+    id: 'highway_crosser',
+    name: 'Highway Crosser',
+    description: 'Cross the multi-lane highway by hopping between vehicles and platforms. Avoid collisions and reach the other side.',
+    thumbnail: '🐸',
+    category: 'Arcade',
+    controls: ['Arrow Keys / WASD: Move', 'Space: Pause game'],
+    component: HighwayCrosser,
   }
 ];
 
