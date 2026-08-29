@@ -9,6 +9,7 @@ import Bounce from '../games/bounce/Bounce';
 import FlappyPacket from '../games/flappy-packet/FlappyPacket';
 import GridBlocks from '../games/grid-blocks/GridBlocks';
 import HighwayCrosser from '../games/highway-crosser/HighwayCrosser';
+import MalwareSweeper from '../games/malware-sweeper/MalwareSweeper';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -100,6 +101,13 @@ export const gameRegistry: GameMeta[] = [
     category: 'Arcade',
     controls: ['Arrow Keys / WASD: Move', 'Space: Pause game'],
     component: HighwayCrosser,
+    id: 'malware_sweeper',
+    name: 'Malware Sweeper',
+    description: 'Scan and isolate infected memory sectors. Identify all malware nodes before they compromise the system.',
+    thumbnail: '💣',
+    category: 'Puzzle',
+    controls: ['Left Click / Tap: Reveal sector', 'Right Click / Long Press: Flag suspect sector'],
+    component: MalwareSweeper,
   }
 ];
 
