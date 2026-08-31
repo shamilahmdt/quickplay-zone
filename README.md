@@ -37,6 +37,7 @@ QuickPlay Zone features a selection of retro games built to run instantly offlin
 * **Neon Pong** 🏓 — Classic paddle tennis with support for local two-player matchups or single-player vs AI.
 * **2048 Puzzle** 🔢 — Slide and merge matching number tiles to reach the 2048 goal.
 * **Bounce Retro** 🔴 — Roll, jump, and bounce a squishy red ball through 10 obstacle-filled platformer levels.
+* **Cyber Highway Crosser 🐸** — Guide your data packet across moving traffic and memory-stream platforms, avoid collisions, and reach the server docks.
 
 ---
 
