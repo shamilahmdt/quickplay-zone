@@ -101,6 +101,8 @@ export const gameRegistry: GameMeta[] = [
     category: 'Arcade',
     controls: ['Arrow Keys / WASD: Move', 'Space: Pause game'],
     component: HighwayCrosser,
+  },
+  {
     id: 'malware_sweeper',
     name: 'Malware Sweeper',
     description: 'Scan and isolate infected memory sectors. Identify all malware nodes before they compromise the system.',
