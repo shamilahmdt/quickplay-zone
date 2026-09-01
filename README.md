@@ -30,14 +30,17 @@ Experience QuickPlay Zone live at: **[https://quickplay-zone.vercel.app/](https:
 
 QuickPlay Zone features a selection of retro games built to run instantly offline:
 
-* **Snake Classic** 🐍 — Eat silver bits, adjust speed/difficulty, select wall wrapping modes, and save high scores.
-* **Cosmic Defender** 🚀 — Move your spaceship, dodge enemy projectiles, and shoot down waves of hostile aliens.
-* **Brick Breaker** 🧱 — Bounce balls and break neon bricks with fluid movement and paddle physics.
-* **Simon Says** 🎵 — Watch sound and light patterns and repeat the sequence to test your memory.
-* **Neon Pong** 🏓 — Classic paddle tennis with support for local two-player matchups or single-player vs AI.
-* **2048 Puzzle** 🔢 — Slide and merge matching number tiles to reach the 2048 goal.
-* **Bounce Retro** 🔴 — Roll, jump, and bounce a squishy red ball through 10 obstacle-filled platformer levels.
-* **Cyber Highway Crosser 🐸** — Guide your data packet across moving traffic and memory-stream platforms, avoid collisions, and reach the server docks.
+* **Snake Classic** 🐍 — Slither through the grid, eat silver bits, adjust speed/difficulty, select wall wrapping modes, and save high scores.
+* **Cosmic Defender** 🚀 — Defend the galaxy from waves of hostile alien invaders with fluid controls and laser fire.
+* **Brick Breaker** 🧱 — Bounce the ball to smash neon bricks with dynamic paddle physics.
+* **Simon Says** 🎵 — Watch light patterns and audio cues, then repeat the sequence to test your memory.
+* **Neon Pong** 🏓 — Classic retro tennis with support for local two-player matchups or single-player vs AI.
+* **2048 Puzzle** 🔢 — Slide and merge matching number tiles to reach the legendary 2048 goal.
+* **Bounce Retro** 🔴 — Roll, jump, and bounce a squishy red ball through obstacle-filled platformer levels.
+* **Flappy Packet** 🐤 — Navigate data packets through vertical firewall security gaps.
+* **Grid Blocks** 🧱 — Rotate and fit monochrome geometric blocks to clear rows.
+* **Highway Crosser** 🐸 — Guide your packet across moving traffic and data streams to reach the server docks.
+* **Malware Sweeper** 💣 — Scan and isolate infected memory sectors before systems are compromised.
 
 ---
 
