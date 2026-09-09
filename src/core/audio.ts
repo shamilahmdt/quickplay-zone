@@ -8,7 +8,8 @@ class AudioManager {
   init() {
     if (this.ctx) return;
     try {
-      this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      this.ctx = new AudioCtx();
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
@@ -280,7 +281,98 @@ class AudioManager {
     playNote(880.00, 0.08); // A5
   }
 
-  startBgm(game: 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy') {
+  private dotEatToggle: boolean = false;
+  playDotEat() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    this.ctx.resume();
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+
+    this.dotEatToggle = !this.dotEatToggle;
+    const freq = this.dotEatToggle ? 260 : 330;
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.4, this.ctx.currentTime + 0.05);
+
+    gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + 0.05);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.06);
+  }
+
+  playPowerPellet() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    this.ctx.resume();
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.2);
+
+    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.22);
+  }
+
+  playGhostEat() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    this.ctx.resume();
+    const now = this.ctx.currentTime;
+    const notes = [400, 600, 800, 1200];
+    notes.forEach((freq, idx) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain);
+      gain.connect(this.masterGain || this.ctx.destination);
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+
+      gain.gain.setValueAtTime(0.09, now + idx * 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.005, now + idx * 0.04 + 0.06);
+
+      osc.start(now + idx * 0.04);
+      osc.stop(now + idx * 0.04 + 0.07);
+    });
+  }
+
+  playPlayerDeath() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    this.ctx.resume();
+    const now = this.ctx.currentTime;
+    const notes = [600, 540, 480, 420, 360, 300, 240, 180];
+    notes.forEach((freq, idx) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain);
+      gain.connect(this.masterGain || this.ctx.destination);
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+
+      gain.gain.setValueAtTime(0.12, now + idx * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.06 + 0.08);
+
+      osc.start(now + idx * 0.06);
+      osc.stop(now + idx * 0.06 + 0.09);
+    });
+  }
+
+  startBgm(game: 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy' | 'crypt') {
     this.init();
     if (this.currentBgm === game) return;
     this.stopBgm();
@@ -290,10 +382,17 @@ class AudioManager {
     this.ctx.resume();
 
     let step = 0;
-    const tempo = game === 'cosmic' ? 130 : game === 'snake' ? 160 : game === 'pong' ? 140 : game === 'flappy' ? 150 : 180; // ms per step
+    const tempo = game === 'cosmic' ? 130 : game === 'snake' ? 160 : game === 'pong' ? 140 : game === 'flappy' ? 150 : game === 'crypt' ? 135 : 180; // ms per step
 
     const getSequence = () => {
       switch (game) {
+        case 'crypt':
+          return [
+            [220.00, 0.6, 'sawtooth'], [261.63, 0.6, 'sawtooth'], [329.63, 0.6, 'sawtooth'], [261.63, 0.6, 'sawtooth'],
+            [196.00, 0.6, 'sawtooth'], [246.94, 0.6, 'sawtooth'], [293.66, 0.6, 'sawtooth'], [246.94, 0.6, 'sawtooth'],
+            [174.61, 0.6, 'sawtooth'], [220.00, 0.6, 'sawtooth'], [261.63, 0.6, 'sawtooth'], [220.00, 0.6, 'sawtooth'],
+            [164.81, 0.6, 'sawtooth'], [207.65, 0.6, 'sawtooth'], [246.94, 0.6, 'sawtooth'], [329.63, 1.0, 'sawtooth']
+          ];
         case 'snake':
           return [
             [261.63, 1, 'triangle'], [329.63, 1, 'triangle'], [392.00, 1, 'triangle'], [329.63, 1, 'triangle'],
@@ -352,7 +451,7 @@ class AudioManager {
         osc.type = type;
         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
         
-        const bgmVolume = game === 'cosmic' ? 0.012 : game === 'pong' ? 0.015 : game === 'flappy' ? 0.025 : 0.032;
+        const bgmVolume = game === 'cosmic' ? 0.012 : game === 'pong' ? 0.015 : game === 'flappy' ? 0.025 : game === 'crypt' ? 0.02 : 0.032;
         gain.gain.setValueAtTime(bgmVolume, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + (tempo / 1000) * durationMult);
 
@@ -383,7 +482,7 @@ class AudioManager {
     if (this.isMuted) {
       this.stopBgm();
     } else if (this.currentBgm) {
-      const bgm = this.currentBgm as 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy';
+      const bgm = this.currentBgm as 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy' | 'crypt';
       this.currentBgm = null;
       this.startBgm(bgm);
     }
