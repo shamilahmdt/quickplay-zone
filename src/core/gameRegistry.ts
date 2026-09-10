@@ -89,7 +89,7 @@ export const gameRegistry: GameMeta[] = [
     id: 'grid_blocks',
     name: 'Grid Blocks',
     description: 'Rotate and fit monochrome geometric blocks to clear rows in this classic arcade puzzle game.',
-    thumbnail: '🧱',
+    thumbnail: '🧩',
     category: 'Puzzle',
     controls: ['A/D / Left/Right: Move Blocks', 'W / Up Arrow: Rotate', 'Space: Hard Drop', 'S / Down Arrow: Soft Drop'],
     component: GridBlocks,

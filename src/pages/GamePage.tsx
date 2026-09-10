@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getGameById } from '../core/gameRegistry';
 import { useTheme } from '../context/ThemeContext';
-import { ArrowLeft, Info, Gamepad2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Info, Gamepad2, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react';
 
 export const GamePage: FC = () => {
   const { gameId } = useParams<{ gameId: string }>();
@@ -12,9 +12,61 @@ export const GamePage: FC = () => {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= 1024
+  );
+  
+  const gameContainerRef = useRef<HTMLDivElement>(null);
   const scrollAttemptsRef = useRef(0);
   const toastCountRef = useRef(0);
   const lastToastTimeRef = useRef(0);
+
+  // Track desktop breakpoint (disable fullscreen mode on mobile/tablet)
+  useEffect(() => {
+    const handleResize = () => {
+      const desktop = window.innerWidth >= 1024;
+      setIsDesktop(desktop);
+      if (!desktop && isFullscreen) {
+        setIsFullscreen(false);
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isFullscreen]);
+
+  // Sync with native fullscreen changes or Esc key
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!isDesktop) return;
+
+    if (!isFullscreen) {
+      if (gameContainerRef.current?.requestFullscreen) {
+        gameContainerRef.current.requestFullscreen().catch(() => {
+          // Fallback to CSS theater mode if browser blocks native fullscreen
+          setIsFullscreen(true);
+        });
+      } else {
+        setIsFullscreen(true);
+      }
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setIsFullscreen(false);
+    }
+  };
 
   // Monitor game status events
   useEffect(() => {
@@ -108,7 +160,7 @@ export const GamePage: FC = () => {
   const GameComponent = game.component;
 
   return (
-    <div className={`flex-1 flex flex-col gap-6 p-6 md:p-8 transition-colors duration-300 relative ${dark ? 'bg-[#121214] text-[#e8e8ea]' : 'bg-[#f8fafc] text-slate-900'
+    <div className={`flex-1 flex flex-col gap-4 sm:gap-6 p-3 sm:p-6 md:p-8 transition-colors duration-300 relative ${dark ? 'bg-[#121214] text-[#e8e8ea]' : 'bg-[#f8fafc] text-slate-900'
       }`}>
       {/* Toast warning for scroll attempt */}
       {showToast && (
@@ -158,15 +210,71 @@ export const GamePage: FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-slate-550 font-semibold">
-          <Gamepad2 className="w-4 h-4 text-slate-500" />
-          <span>Launch state: Ready to play</span>
+        <div className="flex items-center gap-3">
+          {/* Poki-style Desktop Fullscreen Toggle Button */}
+          {isDesktop && (
+            <button
+              onClick={toggleFullscreen}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-[4px] border transition-all cursor-pointer shadow-sm ${
+                dark
+                  ? 'bg-[#1a1a1c] border-slate-800 text-slate-300 hover:text-white hover:border-slate-600 hover:bg-[#222225]'
+                  : 'bg-white border-slate-300 text-slate-700 hover:text-black hover:border-slate-400 hover:bg-slate-50'
+              }`}
+              title={isFullscreen ? "Exit Fullscreen (Esc)" : "Fullscreen Theater Mode"}
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Exit Fullscreen</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Fullscreen</span>
+                </>
+              )}
+            </button>
+          )}
+
+          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-550 font-semibold">
+            <Gamepad2 className="w-4 h-4 text-slate-500" />
+            <span>Ready</span>
+          </div>
         </div>
       </div>
 
-      {/* Dynamic Game Wrapper */}
-      <div className="relative w-full flex justify-center z-10">
-        <GameComponent />
+      {/* Dynamic Game Wrapper / Poki Theater Mode */}
+      <div 
+        ref={gameContainerRef}
+        className={`relative w-full flex justify-center items-center transition-all ${
+          isFullscreen 
+            ? 'fixed inset-0 z-[9999] bg-[#09090b] p-4 sm:p-8 flex flex-col justify-center items-center w-screen h-screen overflow-y-auto' 
+            : 'z-10'
+        }`}
+      >
+        {/* Floating Controls Bar in Fullscreen */}
+        {isFullscreen && (
+          <div className="fixed top-4 right-6 z-[10000] flex items-center gap-3 bg-[#18181b]/90 border border-white/10 px-3.5 py-2 rounded-full shadow-2xl backdrop-blur-md animate-in fade-in duration-200">
+            <span className="text-[11px] font-bold tracking-wider text-slate-300 uppercase hidden sm:inline">
+              {game.name}
+            </span>
+            <div className="h-3 w-[1px] bg-white/20 hidden sm:block"></div>
+            <button
+              onClick={toggleFullscreen}
+              className="flex items-center gap-1.5 px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-semibold tracking-wide border border-white/15 transition-all cursor-pointer shadow"
+              title="Exit Fullscreen (Esc)"
+            >
+              <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Exit (Esc)</span>
+            </button>
+          </div>
+        )}
+
+        <div className={`w-full flex justify-center items-center ${
+          isFullscreen ? 'max-h-[92vh] max-w-[96vw]' : ''
+        }`}>
+          <GameComponent />
+        </div>
       </div>
 
       {/* Game Details Card */}
