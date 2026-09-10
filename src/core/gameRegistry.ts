@@ -10,6 +10,7 @@ import FlappyPacket from '../games/flappy-packet/FlappyPacket';
 import GridBlocks from '../games/grid-blocks/GridBlocks';
 import HighwayCrosser from '../games/highway-crosser/HighwayCrosser';
 import MalwareSweeper from '../games/malware-sweeper/MalwareSweeper';
+import CryptRunner from '../games/crypt-runner/CryptRunner';
 
 export const gameRegistry: GameMeta[] = [
   {
@@ -110,6 +111,15 @@ export const gameRegistry: GameMeta[] = [
     category: 'Puzzle',
     controls: ['Left Click / Tap: Reveal sector', 'Right Click / Long Press: Flag suspect sector'],
     component: MalwareSweeper,
+  },
+  {
+    id: 'crypt_runner',
+    name: 'Cyber Crypt Runner',
+    description: 'Navigate the CPU motherboard maze, collect glowing bits of code, and escape the hunting firewalls.',
+    thumbnail: '👾',
+    category: 'Arcade',
+    controls: ['W/A/S/D / Arrows: Steer direction', 'Spacebar: Pause game', 'Mobile: Onscreen D-pad or Swipe Gestures'],
+    component: CryptRunner,
   }
 ];
 
