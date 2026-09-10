@@ -342,9 +342,9 @@ export const NeonPong: FC = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 w-full max-w-5xl mx-auto px-4 py-8 select-none">
+    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 w-full max-w-5xl mx-auto px-1 sm:px-4 py-2 sm:py-8 select-none">
       {/* Game board column */}
-      <div className="flex-1 flex flex-col items-center">
+      <div className="flex-1 flex flex-col items-center w-full">
         {/* Score Board */}
         <div className="flex justify-between items-center w-full max-w-[600px] mb-4 bg-zinc-100 dark:bg-[#1a1a1c] border border-zinc-200 dark:border-slate-800 p-4 rounded-[4px]">
           <div className="w-1/3 text-left">
