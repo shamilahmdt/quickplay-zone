@@ -19,16 +19,17 @@ Experience QuickPlay Zone live at: **[https://quickplay-zone.vercel.app/](https:
 ## 🚀 Key Features
 
 * **Arcade Aesthetic**: Monochromatic look featuring slate-gray speed-lines, sharp corners, and a silver/off-white gradient wordmark.
-* **Soften OLED Dark Theme**: Designed to prevent eye strain and OLED halation by using a custom `#121214` body background, `#1a1a1c` card layers, and an `#e8e8ea` off-white primary text.
-* **Offline Independence**: Manifest configurations and asset caching allow full gameplay in planes, subways, or whenever offline.
-* **Interactive Splashscreen**: A session-aware retro system deck loader with an animated loading progress bar and pulsing gamepad logo.
-* **Responsive Mobile Header**: Hides desktop-only navigation text links on mobile, collapsing them alongside connection status feeds into a 44px tap-target-friendly sidebar menu.
+* **Softened OLED Dark Theme**: Designed to prevent eye strain and OLED halation by using a custom `#121214` body background, `#1a1a1c` card layers, and an `#e8e8ea` off-white primary text.
+* **Offline Independence & PWA**: Service Worker asset caching and web app manifest allow full gameplay on planes, subways, or whenever offline.
+* **Interactive Splash Screen**: A session-aware retro system deck loader with an animated loading progress bar and pulsing gamepad logo.
+* **Responsive Mobile Header**: Hides desktop navigation links on mobile viewports, collapsing them alongside connection status feeds into a 44px tap-target-friendly sidebar menu.
+* **Local Persistence**: Stores high scores, game statistics, and player leaderboards locally in `localStorage` without requiring external backend servers.
 
 ---
 
 ## 🎮 Available Games
 
-QuickPlay Zone features a selection of retro games built to run instantly offline:
+QuickPlay Zone features a curated selection of retro arcade games built to run instantly offline:
 
 * **Snake Classic** 🐍 — Slither through the grid, eat silver bits, adjust speed/difficulty, select wall wrapping modes, and save high scores.
 * **Cosmic Defender** 🚀 — Defend the galaxy from waves of hostile alien invaders with fluid controls and laser fire.
@@ -38,9 +39,11 @@ QuickPlay Zone features a selection of retro games built to run instantly offlin
 * **2048 Puzzle** 🔢 — Slide and merge matching number tiles to reach the legendary 2048 goal.
 * **Bounce Retro** 🔴 — Roll, jump, and bounce a squishy red ball through obstacle-filled platformer levels.
 * **Flappy Packet** 🐤 — Navigate data packets through vertical firewall security gaps.
-* **Grid Blocks** 🧱 — Rotate and fit monochrome geometric blocks to clear rows.
+* **Grid Blocks** 🧩 — Rotate and fit monochrome geometric blocks to clear rows.
 * **Highway Crosser** 🐸 — Guide your packet across moving traffic and data streams to reach the server docks.
 * **Malware Sweeper** 💣 — Scan and isolate infected memory sectors before systems are compromised.
+* **Cyber Crypt Runner** 👾 — Navigate the CPU motherboard maze, collect glowing bits of code, and escape hunting firewalls.
+
 
 ---
 
@@ -59,21 +62,22 @@ Adding a new game to the QuickPlay Zone grid takes four simple steps:
    ```typescript
    import YourGame from '../games/your-game-name/YourGame';
 
-   export const gameRegistry = [
+   export const gameRegistry: GameMeta[] = [
+     // ...
      {
-       id: 'your-game-id',
+       id: 'your_game_id',
        name: 'Your Game Title',
        description: 'Brief description of features, settings, and objective.',
        thumbnail: '🎮',
        category: 'Arcade',
-       controls: ['W/A/S/D: Steer', 'Space: Action'],
+       controls: ['W/A/S/D: Steer', 'Spacebar: Action'],
        component: YourGame,
      }
    ];
    ```
 
 4. **Verify Build**:
-   Ensure compilation is successful:
+   Ensure compilation and type checking are successful:
    ```bash
    npm run build
    ```
@@ -92,7 +96,17 @@ npm install
 npm run dev
 ```
 
+### Lint Code
+```bash
+npm run lint
+```
+
 ### Compile Production Bundle
 ```bash
 npm run build
+```
+
+### Preview Production Build
+```bash
+npm run preview
 ```
