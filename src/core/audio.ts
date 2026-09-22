@@ -372,7 +372,157 @@ class AudioManager {
     });
   }
 
-  startBgm(game: 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy' | 'crypt') {
+  // --- Meteor Smash SFX ---
+  playMeteorLaser() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    this.ctx.resume();
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(950, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(160, this.ctx.currentTime + 0.12);
+
+    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.13);
+  }
+
+  playMeteorExplosion(tier: 'large' | 'medium' | 'small' = 'medium') {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    this.ctx.resume();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+
+    if (tier === 'large') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(160, now);
+      osc.frequency.exponentialRampToValueAtTime(25, now + 0.45);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.005, now + 0.45);
+      osc.start(now);
+      osc.stop(now + 0.46);
+    } else if (tier === 'medium') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.exponentialRampToValueAtTime(50, now + 0.25);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.005, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.26);
+    } else {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(500, now);
+      osc.frequency.exponentialRampToValueAtTime(90, now + 0.12);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.005, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.13);
+    }
+  }
+
+  private lastThrustSound = 0;
+  playMeteorThrust() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime;
+    if (now - this.lastThrustSound < 0.08) return; // Throttle thrust sound
+    this.lastThrustSound = now;
+    this.ctx.resume();
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(65, now);
+    osc.frequency.exponentialRampToValueAtTime(95, now + 0.07);
+
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.07);
+
+    osc.start(now);
+    osc.stop(now + 0.08);
+  }
+
+  playHyperspace() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    this.ctx.resume();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(1400, now + 0.2);
+    osc.frequency.exponentialRampToValueAtTime(200, now + 0.35);
+
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.35);
+
+    osc.start(now);
+    osc.stop(now + 0.36);
+  }
+
+  playUfoBeep() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    this.ctx.resume();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(740, now);
+    osc.frequency.setValueAtTime(620, now + 0.08);
+
+    gain.gain.setValueAtTime(0.07, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+    osc.start(now);
+    osc.stop(now + 0.17);
+  }
+
+  playPowerupCollect() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    this.ctx.resume();
+    const now = this.ctx.currentTime;
+    const notes = [440, 554.37, 659.25, 880];
+    notes.forEach((freq, idx) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain);
+      gain.connect(this.masterGain || this.ctx.destination);
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+
+      gain.gain.setValueAtTime(0.12, now + idx * 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.05 + 0.15);
+
+      osc.start(now + idx * 0.05);
+      osc.stop(now + idx * 0.05 + 0.16);
+    });
+  }
+
+  startBgm(game: 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy' | 'crypt' | 'meteor') {
     this.init();
     if (this.currentBgm === game) return;
     this.stopBgm();
@@ -382,10 +532,17 @@ class AudioManager {
     this.ctx.resume();
 
     let step = 0;
-    const tempo = game === 'cosmic' ? 130 : game === 'snake' ? 160 : game === 'pong' ? 140 : game === 'flappy' ? 150 : game === 'crypt' ? 135 : 180; // ms per step
+    const tempo = game === 'cosmic' ? 130 : game === 'snake' ? 160 : game === 'pong' ? 140 : game === 'flappy' ? 150 : game === 'crypt' ? 135 : game === 'meteor' ? 145 : 180; // ms per step
 
     const getSequence = () => {
       switch (game) {
+        case 'meteor':
+          return [
+            [110.00, 0.7, 'sawtooth'], [146.83, 0.7, 'sawtooth'], [164.81, 0.7, 'sawtooth'], [146.83, 0.7, 'sawtooth'],
+            [98.00, 0.7, 'sawtooth'], [130.81, 0.7, 'sawtooth'], [146.83, 0.7, 'sawtooth'], [130.81, 0.7, 'sawtooth'],
+            [87.31, 0.7, 'sawtooth'], [116.54, 0.7, 'sawtooth'], [130.81, 0.7, 'sawtooth'], [116.54, 0.7, 'sawtooth'],
+            [82.41, 0.7, 'sawtooth'], [123.47, 0.7, 'sawtooth'], [146.83, 0.7, 'sawtooth'], [164.81, 1.0, 'sawtooth']
+          ];
         case 'crypt':
           return [
             [220.00, 0.6, 'sawtooth'], [261.63, 0.6, 'sawtooth'], [329.63, 0.6, 'sawtooth'], [261.63, 0.6, 'sawtooth'],
@@ -451,7 +608,7 @@ class AudioManager {
         osc.type = type;
         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
         
-        const bgmVolume = game === 'cosmic' ? 0.012 : game === 'pong' ? 0.015 : game === 'flappy' ? 0.025 : game === 'crypt' ? 0.02 : 0.032;
+        const bgmVolume = game === 'cosmic' ? 0.012 : game === 'pong' ? 0.015 : game === 'flappy' ? 0.025 : game === 'crypt' ? 0.02 : game === 'meteor' ? 0.016 : 0.032;
         gain.gain.setValueAtTime(bgmVolume, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + (tempo / 1000) * durationMult);
 
@@ -482,7 +639,7 @@ class AudioManager {
     if (this.isMuted) {
       this.stopBgm();
     } else if (this.currentBgm) {
-      const bgm = this.currentBgm as 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy' | 'crypt';
+      const bgm = this.currentBgm as 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy' | 'crypt' | 'meteor';
       this.currentBgm = null;
       this.startBgm(bgm);
     }

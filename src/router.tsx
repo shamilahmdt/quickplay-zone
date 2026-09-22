@@ -23,6 +23,10 @@ export const router = createBrowserRouter([
         element: <GamePage />,
       },
       {
+        path: 'meteor-smash',
+        element: <Navigate to="/game/meteor_smash" replace />,
+      },
+      {
         path: 'about',
         element: <About />,
       },

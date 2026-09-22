@@ -11,8 +11,24 @@ import GridBlocks from '../games/grid-blocks/GridBlocks';
 import HighwayCrosser from '../games/highway-crosser/HighwayCrosser';
 import MalwareSweeper from '../games/malware-sweeper/MalwareSweeper';
 import CryptRunner from '../games/crypt-runner/CryptRunner';
+import MeteorSmash from '../games/meteor-smash/MeteorSmash';
 
 export const gameRegistry: GameMeta[] = [
+  {
+    id: 'meteor_smash',
+    name: 'Meteor Smash',
+    description: 'Pilot your ship and blast through fields of space debris! Classic retro Asteroids gameplay.',
+    thumbnail: '☄️',
+    category: 'Arcade',
+    controls: [
+      'A/D / Left/Right: Steer ship',
+      'W / Up Arrow: Main thrusters',
+      'Space: Fire plasma lasers',
+      'Shift / S: Hyperspace jump',
+      'P: Pause game',
+    ],
+    component: MeteorSmash,
+  },
   {
     id: 'snake',
     name: 'Snake Classic',
